@@ -1,0 +1,31 @@
+[package]
+name = "rust-zod"
+version = "0.1.0"
+edition = "2021"
+authors = ["Leandro Luk <leandroluk@users.noreply.github.com>"]
+description = "Idiomatic, macro-free port of Zod v4 in Rust: pure runtime AST, closure builders, i18n error catalog, and multi-target exporters."
+license = "MIT OR Apache-2.0"
+readme = "README.md"
+
+[features]
+default = ["std", "serde_json", "regex"]
+std = ["alloc"]
+alloc = []
+serde_json = ["dep:serde_json", "dep:serde"]
+regex = ["dep:regex"]
+
+[dependencies]
+compact_str = { version = "0.10.0", default-features = false }
+regex = { version = "1.13.1", default-features = false, features = ["std", "unicode-perl"], optional = true }
+serde = { version = "1.0", default-features = false, features = ["alloc"], optional = true }
+serde_json = { version = "1.0", default-features = false, features = ["alloc"], optional = true }
+smallvec = { version = "1.16.4", default-features = false }
+
+[dev-dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = { version = "1.0" }
+tokio = { version = "1.0", features = ["rt", "macros"] }
+
+[[test]]
+name = "integration"
+path = "tests/integration.rs"

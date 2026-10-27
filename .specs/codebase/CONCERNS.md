@@ -13,7 +13,7 @@ src/
   error.rs              # ZodIssue, ZodIssueCode, ZodError, formatters
   i18n/                 # Locales (en, pt-BR, es), ErrorMap, default messages
   schema/               # Schema AST, ParseContext, sync/async execution
-  types/                # Primitives, Enum, Object, Interface, Union, Array, etc.
+  types/                # Primitives, Options, Object, Union, Array, etc.
   exporters/
     json_schema.rs      # JSON Schema exporter
     openapi.rs          # OpenAPI 3.0 / 3.1 exporter
