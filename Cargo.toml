@@ -6,6 +6,12 @@ authors = ["Leandro Luk <leandroluk@users.noreply.github.com>"]
 description = "Idiomatic, macro-free port of Zod v4 in Rust: pure runtime AST, closure builders, i18n error catalog, and multi-target exporters."
 license = "MIT OR Apache-2.0"
 readme = "README.md"
+repository = "https://github.com/leandroluk/rust-zod"
+homepage = "https://leandroluk.github.io/rust-zod"
+documentation = "https://docs.rs/rust-zod"
+keywords = ["zod", "validation", "schema", "json-schema", "openapi"]
+categories = ["data-structures", "parsing", "web-programming"]
+rust-version = "1.85"
 
 [features]
 default = ["std", "serde_json", "regex"]

@@ -60,7 +60,13 @@ fn pascal_case(text: &str) -> String {
 fn gql_name(text: &str) -> String {
     let mut out: String = text
         .chars()
-        .map(|c| if c.is_ascii_alphanumeric() || c == '_' { c } else { '_' })
+        .map(|c| {
+            if c.is_ascii_alphanumeric() || c == '_' {
+                c
+            } else {
+                '_'
+            }
+        })
         .collect();
     if out.is_empty() || out.chars().next().is_some_and(|c| c.is_ascii_digit()) {
         out.insert(0, '_');
@@ -117,7 +123,12 @@ impl Gql {
         out
     }
 
-    fn type_ref_inner(&mut self, def: &SchemaDef, hint: &str, meta: Option<&Meta>) -> (String, bool) {
+    fn type_ref_inner(
+        &mut self,
+        def: &SchemaDef,
+        hint: &str,
+        meta: Option<&Meta>,
+    ) -> (String, bool) {
         match def {
             SchemaDef::Meta { inner, meta } => {
                 let hint = meta.id.clone().unwrap_or_else(|| hint.to_string());
@@ -197,7 +208,9 @@ impl Gql {
                     self.scalar("JSON")
                 }
             }
-            SchemaDef::Union(options) | SchemaDef::Xor(options) | SchemaDef::DiscriminatedUnion { options, .. } => {
+            SchemaDef::Union(options)
+            | SchemaDef::Xor(options)
+            | SchemaDef::DiscriminatedUnion { options, .. } => {
                 self.define_union(hint, options, meta)
             }
             SchemaDef::Lazy(lazy) => {
@@ -207,15 +220,21 @@ impl Gql {
                 }
                 let inner = lazy.get();
                 let name = gql_name(&pascal_case(
-                    &inner.def.meta().and_then(|m| m.id.clone()).unwrap_or_else(|| hint.to_string()),
+                    &inner
+                        .def
+                        .meta()
+                        .and_then(|m| m.id.clone())
+                        .unwrap_or_else(|| hint.to_string()),
                 ));
                 self.lazy_names.push((ptr, name.clone()));
                 self.type_ref(&inner.def, &name)
             }
-            SchemaDef::Pipe { input, output } | SchemaDef::Codec { input, output } => match self.target {
-                GraphqlTarget::Type => self.type_ref(output, hint),
-                GraphqlTarget::Input => self.type_ref(input, hint),
-            },
+            SchemaDef::Pipe { input, output } | SchemaDef::Codec { input, output } => {
+                match self.target {
+                    GraphqlTarget::Type => self.type_ref(output, hint),
+                    GraphqlTarget::Input => self.type_ref(input, hint),
+                }
+            }
             SchemaDef::Any
             | SchemaDef::Never
             | SchemaDef::Null
@@ -253,9 +272,16 @@ impl Gql {
         self.fill(name, sdl);
     }
 
-    fn define_union(&mut self, hint: &str, options: &[Arc<SchemaDef>], meta: Option<&Meta>) -> (String, bool) {
+    fn define_union(
+        &mut self,
+        hint: &str,
+        options: &[Arc<SchemaDef>],
+        meta: Option<&Meta>,
+    ) -> (String, bool) {
         // GraphQL input types cannot be unions, and union members must be object types.
-        let all_objects = options.iter().all(|o| matches!(o.strip_meta(), SchemaDef::Object { .. }));
+        let all_objects = options
+            .iter()
+            .all(|o| matches!(o.strip_meta(), SchemaDef::Object { .. }));
         if self.target == GraphqlTarget::Input || !all_objects {
             return self.scalar("JSON");
         }

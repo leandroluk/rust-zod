@@ -9,7 +9,10 @@ pub mod types;
 pub mod value;
 
 // Re-exports for convenient top-level access
-pub use error::{Failure, FlattenedError, FormattedError, PathSegment, SizeOrigin, TreeifiedError, ZodError, ZodIssue, ZodIssueCode};
+pub use error::{
+    Failure, FlattenedError, FormattedError, PathSegment, SizeOrigin, TreeifiedError, ZodError,
+    ZodIssue, ZodIssueCode,
+};
 pub use exporters::{
     from_json_schema, to_graphql_sdl, to_json_schema, GraphqlOptions, GraphqlTarget,
     JsonSchemaOptions, JsonSchemaTarget, SchemaIO,
@@ -17,7 +20,8 @@ pub use exporters::{
 pub use i18n::Locale;
 pub use meta::{Meta, MetaBuilder};
 pub use schema::{
-    Check, CheckOpts, Direction, IntoParseOptions, LazyDef, NumKind, ParseContext, ParseOptions, Schema, SchemaDef,
+    Check, CheckOpts, Direction, IntoParseOptions, LazyDef, NumKind, ParseContext, ParseOptions,
+    Schema, SchemaDef,
 };
 pub use types::{IntoFieldMask, IntoOptions, IntoTuple, Numeric};
 pub use value::Value;
@@ -102,9 +106,7 @@ pub mod z {
     }
 
     // Top-Level Numeric Types
-    pub use types::number::{
-        bigint, float32, float64, int, int32, int64, uint32, uint64,
-    };
+    pub use types::number::{bigint, float32, float64, int, int32, int64, uint32, uint64};
 
     pub fn number() -> Schema<f64> {
         float64()
@@ -163,7 +165,9 @@ pub mod z {
         let def = SchemaDef::Options(allowed.clone());
 
         Schema::new(def, move |val, ctx| match val {
-            Value::String(s) if allowed_clone.iter().any(|a| a == s.as_str()) => Some(Value::String(s.clone())),
+            Value::String(s) if allowed_clone.iter().any(|a| a == s.as_str()) => {
+                Some(Value::String(s.clone()))
+            }
             _ => {
                 ctx.add_issue(
                     ZodIssueCode::InvalidValue {
@@ -180,12 +184,7 @@ pub mod z {
         name: impl Into<String>,
         validator: impl Fn(&Value, &mut ParseContext) -> Option<Value> + Send + Sync + 'static,
     ) -> Schema<T> {
-        Schema::new(
-            SchemaDef::Custom {
-                name: name.into(),
-            },
-            validator,
-        )
+        Schema::new(SchemaDef::Custom { name: name.into() }, validator)
     }
 
     // Exporters & Importer

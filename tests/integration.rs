@@ -55,7 +55,10 @@ fn test_req_core_001_value_model() {
     let mut map = BTreeMap::new();
     map.insert("name".to_string(), Value::from("Leandro"));
     let obj = Value::from(map);
-    assert_eq!(obj.as_object().unwrap().get("name").unwrap().as_str(), Some("Leandro"));
+    assert_eq!(
+        obj.as_object().unwrap().get("name").unwrap().as_str(),
+        Some("Leandro")
+    );
 
     #[cfg(feature = "serde_json")]
     {
@@ -64,7 +67,10 @@ fn test_req_core_001_value_model() {
             "code": 200
         });
         let val: Value = json.into();
-        assert_eq!(val.as_object().unwrap().get("status").unwrap().as_str(), Some("ok"));
+        assert_eq!(
+            val.as_object().unwrap().get("status").unwrap().as_str(),
+            Some("ok")
+        );
         let back_json: serde_json::Value = val.into();
         assert_eq!(back_json["code"], 200);
     }
@@ -124,7 +130,11 @@ fn test_req_core_002_issue_taxonomy() {
         },
     ];
 
-    assert_eq!(issue_codes.len(), 11, "Must contain all 11 Zod v4 issue variants");
+    assert_eq!(
+        issue_codes.len(),
+        11,
+        "Must contain all 11 Zod v4 issue variants"
+    );
 }
 
 #[test]
@@ -193,7 +203,9 @@ fn test_req_core_003_and_004_issues_and_formatters() {
     // 4. .prettify()
     let prettified = error.prettify();
     assert!(prettified.contains("✖ Expected string, received number\n  → at users[0].email"));
-    assert!(prettified.contains("✖ Number must be greater than or equal to 18\n  → at users[0].age"));
+    assert!(
+        prettified.contains("✖ Number must be greater than or equal to 18\n  → at users[0].age")
+    );
     assert!(prettified.contains("✖ Payload header is missing\n  → at <root>"));
 }
 
@@ -215,7 +227,10 @@ fn test_req_core_005_and_006_i18n_and_default_messages() {
     let err_es = schema
         .parse_with(&Value::from(42), ParseOptions::new().locale(Locale::Es))
         .unwrap_err();
-    assert_eq!(err_es.issues[0].message, "Se esperaba string, se recibió number");
+    assert_eq!(
+        err_es.issues[0].message,
+        "Se esperaba string, se recibió number"
+    );
 
     // Global remains PtBr
     assert_eq!(z::get_locale(), Locale::PtBr);
@@ -265,7 +280,9 @@ async fn test_req_core_008_sync_and_async_parsing() {
         Ok(v) => assert_eq!(v, 100.0),
         Err(_) => panic!("expected Ok"),
     }
-    let err = number_schema.parse(&Value::from("not a number")).unwrap_err();
+    let err = number_schema
+        .parse(&Value::from("not a number"))
+        .unwrap_err();
     assert_eq!(err.issues.len(), 1);
 
     // Async parse
@@ -397,13 +414,18 @@ fn test_req_prim_002_string_checks_and_transforms() {
     assert!(schema.parse(&Value::from("hi")).is_err());
 
     // Starts with, ends with, includes
-    let tagged = z::string().starts_with("tag:").ends_with(".rs").includes("zod");
+    let tagged = z::string()
+        .starts_with("tag:")
+        .ends_with(".rs")
+        .includes("zod");
     assert!(tagged.parse(&Value::from("tag:rust-zod.rs")).is_ok());
     assert!(tagged.parse(&Value::from("tag:other.rs")).is_err());
 
     // Slugify
     let slugger = z::string().slugify();
-    let slug = slugger.parse(&Value::from("Hello World / Rust Zod v4!")).unwrap();
+    let slug = slugger
+        .parse(&Value::from("Hello World / Rust Zod v4!"))
+        .unwrap();
     assert_eq!(slug.as_str(), "hello-world-rust-zod-v4");
 }
 
@@ -419,13 +441,17 @@ fn test_req_prim_003_to_006_string_formats_and_iso() {
     assert!(z::email().parse(&Value::from("invalid-email")).is_err());
 
     // URL
-    assert!(z::url().parse(&Value::from("https://github.com/colinhacks/zod")).is_ok());
+    assert!(z::url()
+        .parse(&Value::from("https://github.com/colinhacks/zod"))
+        .is_ok());
     assert!(z::url().parse(&Value::from("invalid-url")).is_err());
 
     // IPv4 & IPv6
     assert!(z::ipv4().parse(&Value::from("192.168.1.1")).is_ok());
     assert!(z::ipv4().parse(&Value::from("999.1.1.1")).is_err());
-    assert!(z::ipv6().parse(&Value::from("2001:0db8:85a3:0000:0000:8a2e:0370:7334")).is_ok());
+    assert!(z::ipv6()
+        .parse(&Value::from("2001:0db8:85a3:0000:0000:8a2e:0370:7334"))
+        .is_ok());
 
     // Base64 & Hex
     assert!(z::base64().parse(&Value::from("cm9vdA==")).is_ok());
@@ -434,7 +460,9 @@ fn test_req_prim_003_to_006_string_formats_and_iso() {
     // ISO formats
     assert!(z::iso::date().parse(&Value::from("2026-10-27")).is_ok());
     assert!(z::iso::date().parse(&Value::from("27-10-2026")).is_err());
-    assert!(z::iso::datetime().parse(&Value::from("2026-10-27T10:00:00Z")).is_ok());
+    assert!(z::iso::datetime()
+        .parse(&Value::from("2026-10-27T10:00:00Z"))
+        .is_ok());
 }
 
 #[test]
@@ -460,11 +488,17 @@ fn test_req_prim_007_numeric_types_and_checks() {
 fn test_req_prim_008_coercion() {
     // Coerce to string
     assert_eq!(
-        z::coerce::string().parse(&Value::from(42)).unwrap().as_str(),
+        z::coerce::string()
+            .parse(&Value::from(42))
+            .unwrap()
+            .as_str(),
         "42"
     );
     assert_eq!(
-        z::coerce::string().parse(&Value::from(true)).unwrap().as_str(),
+        z::coerce::string()
+            .parse(&Value::from(true))
+            .unwrap()
+            .as_str(),
         "true"
     );
 
@@ -473,10 +507,7 @@ fn test_req_prim_008_coercion() {
         z::coerce::number().parse(&Value::from("42.5")).unwrap(),
         42.5
     );
-    assert_eq!(
-        z::coerce::number().parse(&Value::from(true)).unwrap(),
-        1.0
-    );
+    assert_eq!(z::coerce::number().parse(&Value::from(true)).unwrap(), 1.0);
 
     // Coerce to boolean
     assert!(z::coerce::boolean().parse(&Value::from("true")).unwrap());
@@ -513,22 +544,28 @@ fn test_req_coll_002_array_modifiers() {
     let tags = z::array(z::string()).min(2).max(4).unique();
 
     // Valid unique array
-    assert!(tags.parse(&Value::from(vec![Value::from("a"), Value::from("b")])).is_ok());
+    assert!(tags
+        .parse(&Value::from(vec![Value::from("a"), Value::from("b")]))
+        .is_ok());
 
     // Duplicate element triggers unique error
-    assert!(tags.parse(&Value::from(vec![Value::from("a"), Value::from("a")])).is_err());
+    assert!(tags
+        .parse(&Value::from(vec![Value::from("a"), Value::from("a")]))
+        .is_err());
 
     // Too short (< 2)
     assert!(tags.parse(&Value::from(vec![Value::from("a")])).is_err());
 
     // Too long (> 4)
-    assert!(tags.parse(&Value::from(vec![
-        Value::from("1"),
-        Value::from("2"),
-        Value::from("3"),
-        Value::from("4"),
-        Value::from("5"),
-    ])).is_err());
+    assert!(tags
+        .parse(&Value::from(vec![
+            Value::from("1"),
+            Value::from("2"),
+            Value::from("3"),
+            Value::from("4"),
+            Value::from("5"),
+        ]))
+        .is_err());
 }
 
 #[test]
@@ -538,29 +575,36 @@ fn test_req_coll_003_tuple_and_rest() {
         z::number().into_type::<Value>(),
     ]);
 
-    assert!(tuple_schema.parse(&Value::from(vec![Value::from("hello"), Value::from(42)])).is_ok());
-    assert!(tuple_schema.parse(&Value::from(vec![Value::from("hello")])).is_err()); // missing second
+    assert!(tuple_schema
+        .parse(&Value::from(vec![Value::from("hello"), Value::from(42)]))
+        .is_ok());
+    assert!(tuple_schema
+        .parse(&Value::from(vec![Value::from("hello")]))
+        .is_err()); // missing second
 
     // Tuple with rest
-    let tuple_with_rest = z::tuple([
-        z::string().into_type::<Value>(),
-    ])
-    .rest(z::number());
+    let tuple_with_rest = z::tuple([z::string().into_type::<Value>()]).rest(z::number());
 
-    assert!(tuple_with_rest.parse(&Value::from(vec![
-        Value::from("key"),
-        Value::from(1),
-        Value::from(2),
-        Value::from(3),
-    ])).is_ok());
+    assert!(tuple_with_rest
+        .parse(&Value::from(vec![
+            Value::from("key"),
+            Value::from(1),
+            Value::from(2),
+            Value::from(3),
+        ]))
+        .is_ok());
 }
 
 #[test]
 fn test_req_coll_004_and_005_set_and_map() {
     // Set enforces unique elements
     let set_schema = z::set(z::string());
-    assert!(set_schema.parse(&Value::from(vec![Value::from("x"), Value::from("y")])).is_ok());
-    assert!(set_schema.parse(&Value::from(vec![Value::from("x"), Value::from("x")])).is_err());
+    assert!(set_schema
+        .parse(&Value::from(vec![Value::from("x"), Value::from("y")]))
+        .is_ok());
+    assert!(set_schema
+        .parse(&Value::from(vec![Value::from("x"), Value::from("x")]))
+        .is_err());
 
     // Map enforces key and value schemas
     let map_schema = z::map(z::string().min(2), z::number());
@@ -586,13 +630,19 @@ fn test_req_obj_001_to_004_objects_and_records() {
     });
 
     let mut user_map = std::collections::BTreeMap::new();
-    user_map.insert("id".to_string(), Value::from("123e4567-e89b-12d3-a456-426614174000"));
+    user_map.insert(
+        "id".to_string(),
+        Value::from("123e4567-e89b-12d3-a456-426614174000"),
+    );
     user_map.insert("name".to_string(), Value::from("Alice"));
     user_map.insert("email".to_string(), Value::from("alice@example.com"));
     user_map.insert("extra".to_string(), Value::from("strip_me"));
 
     // 1. Default strip
-    let parsed = base_user.clone().parse(&Value::from(user_map.clone())).unwrap();
+    let parsed = base_user
+        .clone()
+        .parse(&Value::from(user_map.clone()))
+        .unwrap();
     let parsed_obj = parsed.as_object().unwrap();
     assert_eq!(parsed_obj.get("name").unwrap().as_str(), Some("Alice"));
     assert!(!parsed_obj.contains_key("extra")); // stripped
@@ -607,7 +657,9 @@ fn test_req_obj_001_to_004_objects_and_records() {
     assert!(loose_parsed.as_object().unwrap().contains_key("extra"));
 
     // 4. Extend
-    let extended = base_user.clone().extend(|o| o.field("age", z::int32().min(18)));
+    let extended = base_user
+        .clone()
+        .extend(|o| o.field("age", z::int32().min(18)));
     user_map.insert("age".to_string(), Value::from(25));
     assert!(extended.parse(&Value::from(user_map.clone())).is_ok());
 
@@ -681,11 +733,21 @@ fn test_req_comb_001_to_005_unions_intersections_lazy() {
     person_map.insert("age".to_string(), Value::from(30));
     let parsed_person = person.parse(&Value::from(person_map)).unwrap();
     assert_eq!(
-        parsed_person.as_object().unwrap().get("name").unwrap().as_str(),
+        parsed_person
+            .as_object()
+            .unwrap()
+            .get("name")
+            .unwrap()
+            .as_str(),
         Some("Bob")
     );
     assert_eq!(
-        parsed_person.as_object().unwrap().get("age").unwrap().as_i64(),
+        parsed_person
+            .as_object()
+            .unwrap()
+            .get("age")
+            .unwrap()
+            .as_i64(),
         Some(30)
     );
 
@@ -704,10 +766,7 @@ fn test_req_comb_001_to_005_unions_intersections_lazy() {
     tree.insert("name".to_string(), Value::from("Electronics"));
     let mut sub_tree = std::collections::BTreeMap::new();
     sub_tree.insert("name".to_string(), Value::from("Laptops"));
-    tree.insert(
-        "sub".to_string(),
-        Value::from(vec![Value::from(sub_tree)]),
-    );
+    tree.insert("sub".to_string(), Value::from(vec![Value::from(sub_tree)]));
 
     assert!(cat.parse(&Value::from(tree)).is_ok());
 }
@@ -726,37 +785,37 @@ fn test_req_pipe_001_to_003_modifiers_refinements_and_pipelines() {
     );
 
     let with_catch = z::number().catch(0.0);
-    assert_eq!(
-        with_catch.parse(&Value::from("invalid")).unwrap(),
-        0.0
-    );
+    assert_eq!(with_catch.parse(&Value::from("invalid")).unwrap(), 0.0);
 
     // 2. Refine
-    let even_num = z::int().refine(|val| val.as_i64().unwrap_or(1) % 2 == 0, "Number must be even");
+    let even_num = z::int().refine(
+        |val| val.as_i64().unwrap_or(1) % 2 == 0,
+        "Number must be even",
+    );
     assert!(even_num.parse(&Value::from(4)).is_ok());
     assert!(even_num.parse(&Value::from(5)).is_err());
 
     // 3. Transform & Pipe
-    let trimmed_uppercase = z::string()
-        .transform(|val| {
-            if let Value::String(s) = val {
-                Value::from(s.trim().to_uppercase())
-            } else {
-                val
-            }
-        });
+    let trimmed_uppercase = z::string().transform(|val| {
+        if let Value::String(s) = val {
+            Value::from(s.trim().to_uppercase())
+        } else {
+            val
+        }
+    });
     let transformed = trimmed_uppercase.parse(&Value::from("  hello  ")).unwrap();
     assert_eq!(transformed.as_str(), Some("HELLO"));
 
     // Pipe string length into number validator
-    let str_len_pipe = z::string().transform(|val| {
-        if let Value::String(s) = val {
-            Value::from(s.len() as i64)
-        } else {
-            val
-        }
-    })
-    .pipe(z::int().min(5));
+    let str_len_pipe = z::string()
+        .transform(|val| {
+            if let Value::String(s) = val {
+                Value::from(s.len() as i64)
+            } else {
+                val
+            }
+        })
+        .pipe(z::int().min(5));
 
     assert!(str_len_pipe.parse(&Value::from("12345")).is_ok());
     assert!(str_len_pipe.parse(&Value::from("123")).is_err());
@@ -768,12 +827,8 @@ fn test_req_pipe_004_and_005_codecs() {
     let epoch_to_iso = z::codec(
         z::int64(),
         z::iso::date(),
-        |val, _ctx| {
-            val.as_i64().map(|_ts| Value::String("2026-10-27".into()))
-        },
-        |val, _ctx| {
-            val.as_str().map(|_s| Value::Int(1700000000000))
-        },
+        |val, _ctx| val.as_i64().map(|_ts| Value::String("2026-10-27".into())),
+        |val, _ctx| val.as_str().map(|_s| Value::Int(1700000000000)),
     );
 
     // Decode: int -> string ISO
@@ -796,8 +851,14 @@ fn test_req_pipe_004_and_005_codecs() {
     assert!(bool_codec.decode(&Value::from("invalid")).is_err());
 
     // Encode bool into canonical string
-    assert_eq!(bool_codec.encode(&Value::from(true)).unwrap().as_str(), Some("true"));
-    assert_eq!(bool_codec.encode(&Value::from(false)).unwrap().as_str(), Some("false"));
+    assert_eq!(
+        bool_codec.encode(&Value::from(true)).unwrap().as_str(),
+        Some("true")
+    );
+    assert_eq!(
+        bool_codec.encode(&Value::from(false)).unwrap().as_str(),
+        Some("false")
+    );
 }
 
 // ----------------------------------------------------------------------------
@@ -835,7 +896,8 @@ fn test_req_exp_001_to_003_json_schema_and_from_json_schema() {
     assert_eq!(required.len(), 2);
 
     // 2. OpenAPI 3.0 export
-    let openapi_opts = rust_zod::JsonSchemaOptions::new().target(rust_zod::JsonSchemaTarget::OpenApi30);
+    let openapi_opts =
+        rust_zod::JsonSchemaOptions::new().target(rust_zod::JsonSchemaTarget::OpenApi30);
     let openapi_schema = z::to_json_schema(&user_schema, openapi_opts);
     let oas_obj = openapi_schema.as_object().unwrap();
     assert!(oas_obj.contains_key("properties"));
@@ -843,7 +905,10 @@ fn test_req_exp_001_to_003_json_schema_and_from_json_schema() {
     // 3. Reverse Importer (from_json_schema)
     let imported_schema = z::from_json_schema(&json_schema);
     let mut valid_data = std::collections::BTreeMap::new();
-    valid_data.insert("id".to_string(), Value::from("123e4567-e89b-12d3-a456-426614174000"));
+    valid_data.insert(
+        "id".to_string(),
+        Value::from("123e4567-e89b-12d3-a456-426614174000"),
+    );
     valid_data.insert("email".to_string(), Value::from("user@example.com"));
 
     assert!(imported_schema.parse(&Value::from(valid_data)).is_ok());
@@ -870,7 +935,9 @@ fn test_req_gql_001_to_003_graphql_sdl_generator() {
     assert!(sdl.contains("tags: [String!]!"));
 
     // 2. Input type SDL
-    let input_opts = rust_zod::GraphqlOptions::new().target(rust_zod::GraphqlTarget::Input).type_name("UserInput");
+    let input_opts = rust_zod::GraphqlOptions::new()
+        .target(rust_zod::GraphqlTarget::Input)
+        .type_name("UserInput");
     let input_sdl = z::to_graphql_sdl(&user_schema, input_opts);
     assert!(input_sdl.contains("input UserInput {"));
 
@@ -888,7 +955,10 @@ fn test_req_opt_and_codec_presets() {
     let base_schema = z::string().min(2);
     let nullish_schema = base_schema.clone().nullish();
     assert!(nullish_schema.parse(&Value::Null).unwrap().is_none());
-    assert_eq!(nullish_schema.parse(&Value::from("hello")).unwrap(), Some("hello".to_string()));
+    assert_eq!(
+        nullish_schema.parse(&Value::from("hello")).unwrap(),
+        Some("hello".to_string())
+    );
 
     let unwrapped = nullish_schema.nonoptional();
     assert!(unwrapped.parse(&Value::Null).is_err());
@@ -903,7 +973,12 @@ fn test_req_opt_and_codec_presets() {
     let str_int = z::codecs::string_int();
     let int_val: i64 = str_int.decode(&Value::from("12345")).unwrap();
     assert_eq!(int_val, 12345);
-    let encoded_str: String = str_int.encode(&Value::from(12345)).unwrap().as_str().unwrap().to_string();
+    let encoded_str: String = str_int
+        .encode(&Value::from(12345))
+        .unwrap()
+        .as_str()
+        .unwrap()
+        .to_string();
     assert_eq!(encoded_str, "12345");
 
     // 4. z::codecs::string_number
@@ -913,17 +988,13 @@ fn test_req_opt_and_codec_presets() {
 
     // 5. z::codecs::epoch_date
     let epoch_date = z::codecs::epoch_date();
-    let date_val = epoch_date.decode_value(&Value::from(1700000000000i64)).unwrap();
+    let date_val = epoch_date
+        .decode_value(&Value::from(1700000000000i64))
+        .unwrap();
     assert_eq!(date_val, Value::Date(1700000000000));
     let encoded_epoch = epoch_date.encode(&date_val).unwrap();
     assert_eq!(encoded_epoch, Value::Int(1700000000000));
 }
-
-
-
-
-
-
 
 // ----------------------------------------------------------------------------
 // Audit fixes (SD-1..SD-6) and Feature 09
@@ -950,13 +1021,18 @@ fn test_sd2_lazy_is_shared_memoized_and_exports_cycles() {
     let a = z::lazy(category);
     let b = z::lazy(category);
     match (&*a.def, &*b.def) {
-        (rust_zod::SchemaDef::Lazy(x), rust_zod::SchemaDef::Lazy(y)) => assert!(std::sync::Arc::ptr_eq(x, y)),
+        (rust_zod::SchemaDef::Lazy(x), rust_zod::SchemaDef::Lazy(y)) => {
+            assert!(std::sync::Arc::ptr_eq(x, y))
+        }
         _ => panic!("expected lazy nodes"),
     }
 
     let tree = obj(&[
         ("name", Value::from("root")),
-        ("sub", Value::from(vec![obj(&[("name", Value::from("leaf"))])])),
+        (
+            "sub",
+            Value::from(vec![obj(&[("name", Value::from("leaf"))])]),
+        ),
     ]);
     assert!(z::lazy(category).parse(&tree).is_ok());
     let bad = obj(&[
@@ -972,7 +1048,10 @@ fn test_sd2_lazy_is_shared_memoized_and_exports_cycles() {
     assert!(js.as_object().unwrap().contains_key("$defs"));
 
     // GraphQL: terminates and refers to itself by name
-    let sdl = z::to_graphql_sdl(&z::lazy(category), rust_zod::GraphqlOptions::new().type_name("Category"));
+    let sdl = z::to_graphql_sdl(
+        &z::lazy(category),
+        rust_zod::GraphqlOptions::new().type_name("Category"),
+    );
     assert!(sdl.contains("type Category {"), "{}", sdl);
     assert!(sdl.contains("sub: [Category!]"), "{}", sdl);
 }
@@ -985,11 +1064,16 @@ async fn test_sd3_real_async_steps() {
     );
 
     // Sync parse of an async schema is a clean error, never a panic
-    let err = unique_email.parse(&Value::from("a@example.com")).unwrap_err();
+    let err = unique_email
+        .parse(&Value::from("a@example.com"))
+        .unwrap_err();
     assert_eq!(err.failure, Some(rust_zod::Failure::Async));
     assert!(err.issues.is_empty());
 
-    assert!(unique_email.parse_async(&Value::from("a@example.com")).await.is_ok());
+    assert!(unique_email
+        .parse_async(&Value::from("a@example.com"))
+        .await
+        .is_ok());
     let err = unique_email
         .parse_async(&Value::from("taken@example.com"))
         .await
@@ -1007,13 +1091,19 @@ async fn test_sd3_real_async_steps() {
         .parse_async(&obj(&[("email", Value::from("x@x.com"))]))
         .await
         .unwrap_err();
-    assert_eq!(e.issues[0].path, vec![rust_zod::PathSegment::Key("email".into())]);
+    assert_eq!(
+        e.issues[0].path,
+        vec![rust_zod::PathSegment::Key("email".into())]
+    );
 
     // Chained async steps resolve across replay passes
     let doubled = z::int32()
         .transform_async(|v| async move { Value::Int(v.as_i64().unwrap() * 2) })
         .pipe(z::int32().refine_async(|v| async move { v.as_i64() == Some(42) }, "must be 42"));
-    assert_eq!(doubled.parse_value_async(&Value::from(21)).await.unwrap(), Value::Int(42));
+    assert_eq!(
+        doubled.parse_value_async(&Value::from(21)).await.unwrap(),
+        Value::Int(42)
+    );
     assert!(doubled.parse_value_async(&Value::from(20)).await.is_err());
     assert_eq!(
         doubled.parse_value(&Value::from(21)).unwrap_err().failure,
@@ -1033,7 +1123,10 @@ async fn test_sd3_real_async_steps() {
         |v| async move { Ok(Value::from(v.as_i64().unwrap().to_string())) },
     );
     assert_eq!(c.decode_async(&Value::from("7")).await.unwrap(), 7);
-    assert_eq!(c.encode_async(&Value::from(7)).await.unwrap(), Value::from("7"));
+    assert_eq!(
+        c.encode_async(&Value::from(7)).await.unwrap(),
+        Value::from("7")
+    );
     assert!(c.decode_async(&Value::from("x")).await.is_err());
 }
 
@@ -1055,18 +1148,30 @@ fn test_sd4_input_output_required_and_error_customization() {
         .is_ok());
 
     // .error() overrides the schema's own message
-    let e = z::email().error("E-mail inválido").parse(&Value::from("nope")).unwrap_err();
+    let e = z::email()
+        .error("E-mail inválido")
+        .parse(&Value::from("nope"))
+        .unwrap_err();
     assert_eq!(e.issues[0].message, "E-mail inválido");
 
     // _with: custom message and abort (later checks are skipped)
     let s = z::string()
-        .min_with(8, |e| e.error("A senha deve ter pelo menos 8 caracteres").abort(true))
+        .min_with(8, |e| {
+            e.error("A senha deve ter pelo menos 8 caracteres")
+                .abort(true)
+        })
         .regex("[0-9]");
     let err = s.parse(&Value::from("abc")).unwrap_err();
     assert_eq!(err.issues.len(), 1);
-    assert_eq!(err.issues[0].message, "A senha deve ter pelo menos 8 caracteres");
+    assert_eq!(
+        err.issues[0].message,
+        "A senha deve ter pelo menos 8 caracteres"
+    );
     let err = s.parse(&Value::from("abcdefghij")).unwrap_err();
-    assert!(matches!(err.issues[0].code, ZodIssueCode::InvalidFormat { .. }));
+    assert!(matches!(
+        err.issues[0].code,
+        ZodIssueCode::InvalidFormat { .. }
+    ));
     assert!(s.parse(&Value::from("abcdefgh1")).is_ok());
 
     // parse options as closure builder
@@ -1088,28 +1193,65 @@ fn test_sd5_exporters_keep_constraints() {
             .field("kind", z::literal("a"))
             .field(
                 "either",
-                z::union([z::string().into_type::<Value>(), z::int32().into_type::<Value>()]),
+                z::union([
+                    z::string().into_type::<Value>(),
+                    z::int32().into_type::<Value>(),
+                ]),
             )
             .field("when", z::iso::datetime())
     });
     let js = z::to_json_schema(&schema, rust_zod::JsonSchemaOptions::default());
-    let props = js.as_object().unwrap().get("properties").unwrap().as_object().unwrap();
+    let props = js
+        .as_object()
+        .unwrap()
+        .get("properties")
+        .unwrap()
+        .as_object()
+        .unwrap();
     let get = |k: &str| props.get(k).unwrap().as_object().unwrap().clone();
 
     assert_eq!(get("email").get("format").unwrap().as_str(), Some("email"));
     assert_eq!(get("email").get("maxLength").unwrap().as_i64(), Some(50));
     assert_eq!(get("name").get("minLength").unwrap().as_i64(), Some(2));
-    assert_eq!(get("name").get("pattern").unwrap().as_str(), Some("^[a-z]+$"));
+    assert_eq!(
+        get("name").get("pattern").unwrap().as_str(),
+        Some("^[a-z]+$")
+    );
     assert_eq!(get("age").get("minimum").unwrap().as_i64(), Some(18));
-    assert_eq!(get("age").get("exclusiveMaximum").unwrap().as_i64(), Some(120));
+    assert_eq!(
+        get("age").get("exclusiveMaximum").unwrap().as_i64(),
+        Some(120)
+    );
     assert_eq!(get("age").get("type").unwrap().as_str(), Some("integer"));
     assert_eq!(get("tags").get("minItems").unwrap().as_i64(), Some(1));
-    assert_eq!(get("tags").get("uniqueItems").unwrap().as_bool(), Some(true));
-    assert_eq!(get("pos").get("prefixItems").unwrap().as_array().unwrap().len(), 2);
+    assert_eq!(
+        get("tags").get("uniqueItems").unwrap().as_bool(),
+        Some(true)
+    );
+    assert_eq!(
+        get("pos")
+            .get("prefixItems")
+            .unwrap()
+            .as_array()
+            .unwrap()
+            .len(),
+        2
+    );
     assert!(get("meta").contains_key("additionalProperties"));
     assert_eq!(get("kind").get("const").unwrap().as_str(), Some("a"));
-    assert_eq!(get("either").get("anyOf").unwrap().as_array().unwrap().len(), 2);
-    assert_eq!(get("when").get("format").unwrap().as_str(), Some("date-time"));
+    assert_eq!(
+        get("either")
+            .get("anyOf")
+            .unwrap()
+            .as_array()
+            .unwrap()
+            .len(),
+        2
+    );
+    assert_eq!(
+        get("when").get("format").unwrap().as_str(),
+        Some("date-time")
+    );
 
     // Draft-07 uses tuple `items` arrays
     let d7 = z::to_json_schema(
@@ -1132,10 +1274,19 @@ fn test_sd5_exporters_keep_constraints() {
 
     // io: Input uses the codec input, Output the codec output
     let c = z::codecs::string_int();
-    let input = z::to_json_schema(&c, rust_zod::JsonSchemaOptions::new().io(rust_zod::SchemaIO::Input));
+    let input = z::to_json_schema(
+        &c,
+        rust_zod::JsonSchemaOptions::new().io(rust_zod::SchemaIO::Input),
+    );
     let output = z::to_json_schema(&c, rust_zod::JsonSchemaOptions::new());
-    assert_eq!(input.as_object().unwrap().get("type").unwrap().as_str(), Some("string"));
-    assert_eq!(output.as_object().unwrap().get("type").unwrap().as_str(), Some("integer"));
+    assert_eq!(
+        input.as_object().unwrap().get("type").unwrap().as_str(),
+        Some("string")
+    );
+    assert_eq!(
+        output.as_object().unwrap().get("type").unwrap().as_str(),
+        Some("integer")
+    );
 
     // Round trip keeps constraints
     let back = z::from_json_schema(&js);
@@ -1165,10 +1316,16 @@ fn test_sd5_exporters_keep_constraints() {
                 z::discriminated_union(
                     "kind",
                     [
-                        z::object(|c| c.field("kind", z::literal("circle")).field("r", z::float64()))
-                            .meta(|m| m.id("Circle")),
-                        z::object(|c| c.field("kind", z::literal("square")).field("side", z::float64()))
-                            .meta(|m| m.id("Square")),
+                        z::object(|c| {
+                            c.field("kind", z::literal("circle"))
+                                .field("r", z::float64())
+                        })
+                        .meta(|m| m.id("Circle")),
+                        z::object(|c| {
+                            c.field("kind", z::literal("square"))
+                                .field("side", z::float64())
+                        })
+                        .meta(|m| m.id("Square")),
                     ],
                 ),
             )
@@ -1178,7 +1335,11 @@ fn test_sd5_exporters_keep_constraints() {
     assert!(sdl.contains("created: DateTime!"), "{}", sdl);
     assert!(sdl.contains("address: ThingAddress!"), "{}", sdl);
     assert!(sdl.contains("type ThingAddress {"), "{}", sdl);
-    assert!(sdl.contains("union ThingShape = Circle | Square"), "{}", sdl);
+    assert!(
+        sdl.contains("union ThingShape = Circle | Square"),
+        "{}",
+        sdl
+    );
     assert!(sdl.contains("scalar DateTime"), "{}", sdl);
 }
 
@@ -1198,10 +1359,16 @@ fn test_sd6_encode_propagates_and_one_way_steps_fail() {
             ("history", Value::from(vec![Value::Int(1), Value::Int(2)])),
         ]))
         .unwrap();
-    assert_eq!(decoded.as_object().unwrap().get("at"), Some(&Value::Date(1000)));
+    assert_eq!(
+        decoded.as_object().unwrap().get("at"),
+        Some(&Value::Date(1000))
+    );
 
     let encoded = schema.encode(&decoded).unwrap();
-    assert_eq!(encoded.as_object().unwrap().get("at"), Some(&Value::Int(1000)));
+    assert_eq!(
+        encoded.as_object().unwrap().get("at"),
+        Some(&Value::Int(1000))
+    );
     assert_eq!(
         encoded.as_object().unwrap().get("history"),
         Some(&Value::from(vec![Value::Int(1), Value::Int(2)]))
@@ -1223,7 +1390,10 @@ fn test_sd6_encode_propagates_and_one_way_steps_fail() {
     // ...and it propagates through containers
     let nested = z::array(t);
     assert!(matches!(
-        nested.encode(&Value::from(vec![Value::from("x")])).unwrap_err().failure,
+        nested
+            .encode(&Value::from(vec![Value::from("x")]))
+            .unwrap_err()
+            .failure,
         Some(rust_zod::Failure::Encode(_))
     ));
 
@@ -1234,7 +1404,8 @@ fn test_sd6_encode_propagates_and_one_way_steps_fail() {
         Value::from(vec![Value::Int(1), Value::Int(2)])
     );
     assert_eq!(
-        j.encode(&Value::from(vec![Value::Int(1), Value::Int(2)])).unwrap(),
+        j.encode(&Value::from(vec![Value::Int(1), Value::Int(2)]))
+            .unwrap(),
         Value::from("[1,2]")
     );
     let b = z::codecs::base64_bytes();
@@ -1258,7 +1429,10 @@ fn test_feature_09_paths_and_fast_paths() {
     }
     let err = schema.parse_value(&input).unwrap_err();
     assert_eq!(err.issues.len(), 1);
-    assert_eq!(err.issues[0].path, expected.into_iter().rev().collect::<Vec<_>>());
+    assert_eq!(
+        err.issues[0].path,
+        expected.into_iter().rev().collect::<Vec<_>>()
+    );
 
     // Primitive targets are extracted straight from `Value` (no serde round trip)
     assert_eq!(z::string().parse(&Value::from("x")).unwrap(), "x");

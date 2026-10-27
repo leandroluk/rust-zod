@@ -172,7 +172,11 @@ pub fn object<F>(builder_fn: F) -> Schema<Value>
 where
     F: FnOnce(ObjectBuilder) -> ObjectBuilder,
 {
-    build_object(builder_fn(ObjectBuilder::new()).fields, UnknownKeysMode::Strip, None)
+    build_object(
+        builder_fn(ObjectBuilder::new()).fields,
+        UnknownKeysMode::Strip,
+        None,
+    )
 }
 
 /// `z::strict_object(|o| ...)`: unknown keys raise `unrecognized_keys`.
@@ -180,7 +184,11 @@ pub fn strict_object<F>(builder_fn: F) -> Schema<Value>
 where
     F: FnOnce(ObjectBuilder) -> ObjectBuilder,
 {
-    build_object(builder_fn(ObjectBuilder::new()).fields, UnknownKeysMode::Strict, None)
+    build_object(
+        builder_fn(ObjectBuilder::new()).fields,
+        UnknownKeysMode::Strict,
+        None,
+    )
 }
 
 /// `z::loose_object(|o| ...)`: unknown keys are preserved.
@@ -188,7 +196,11 @@ pub fn loose_object<F>(builder_fn: F) -> Schema<Value>
 where
     F: FnOnce(ObjectBuilder) -> ObjectBuilder,
 {
-    build_object(builder_fn(ObjectBuilder::new()).fields, UnknownKeysMode::Loose, None)
+    build_object(
+        builder_fn(ObjectBuilder::new()).fields,
+        UnknownKeysMode::Loose,
+        None,
+    )
 }
 
 // ----------------------------------------------------------------------------
@@ -206,7 +218,11 @@ impl<T: 'static> Schema<T> {
     /// Reject unknown keys.
     pub fn strict(&self) -> Schema<Value> {
         let s = self.object_shape("strict");
-        build_object(s.fields.clone(), UnknownKeysMode::Strict, s.catchall.clone())
+        build_object(
+            s.fields.clone(),
+            UnknownKeysMode::Strict,
+            s.catchall.clone(),
+        )
     }
 
     /// Preserve unknown keys (`passthrough` in Zod v3).
@@ -298,7 +314,11 @@ impl<T: 'static> Schema<T> {
     /// Make every optional field required again.
     pub fn required(&self) -> Schema<Value> {
         let s = self.object_shape("required");
-        let fields = s.fields.iter().map(|(k, v)| (k.clone(), unwrap_optional(v))).collect();
+        let fields = s
+            .fields
+            .iter()
+            .map(|(k, v)| (k.clone(), unwrap_optional(v)))
+            .collect();
         build_object(fields, s.mode, s.catchall.clone())
     }
 
@@ -341,7 +361,10 @@ fn unwrap_optional(schema: &Schema<Value>) -> Schema<Value> {
 // ----------------------------------------------------------------------------
 
 /// `z::record(key_schema, value_schema)`: object with arbitrary keys.
-pub fn record<K: 'static, V: 'static>(key_schema: Schema<K>, value_schema: Schema<V>) -> Schema<BTreeMap<String, V>> {
+pub fn record<K: 'static, V: 'static>(
+    key_schema: Schema<K>,
+    value_schema: Schema<V>,
+) -> Schema<BTreeMap<String, V>> {
     let key_val = key_schema.validator_clone();
     let val_val = value_schema.validator_clone();
     let def = SchemaDef::Record {
@@ -391,7 +414,10 @@ pub fn partial_record<K: 'static, V: 'static>(
 }
 
 /// Record that keeps keys not matching the key schema untouched (`z.looseRecord`).
-pub fn loose_record<K: 'static, V: 'static>(key_schema: Schema<K>, value_schema: Schema<V>) -> Schema<BTreeMap<String, V>> {
+pub fn loose_record<K: 'static, V: 'static>(
+    key_schema: Schema<K>,
+    value_schema: Schema<V>,
+) -> Schema<BTreeMap<String, V>> {
     let key_val = key_schema.validator_clone();
     let val_val = value_schema.validator_clone();
     let def = SchemaDef::Record {

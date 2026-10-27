@@ -74,7 +74,10 @@ fn main() {
         o.field("id", z::uuid())
             .field("name", z::string().min(2))
             .field("age", z::int32().gte(18))
-            .field("address", z::object(|a| a.field("street", z::string()).field("zip", z::string())))
+            .field(
+                "address",
+                z::object(|a| a.field("street", z::string()).field("zip", z::string())),
+            )
     });
     let user_input = obj(vec![
         ("id", Value::from("123e4567-e89b-12d3-a456-426614174000")),
@@ -82,14 +85,21 @@ fn main() {
         ("age", Value::from(30)),
         (
             "address",
-            obj(vec![("street", Value::from("Main St")), ("zip", Value::from("12345"))]),
+            obj(vec![
+                ("street", Value::from("Main St")),
+                ("zip", Value::from("12345")),
+            ]),
         ),
     ]);
     bench("object (nested, 4 + 2 fields)", N, || {
         std::hint::black_box(user.parse_value(&user_input).unwrap());
     });
 
-    let invalid = obj(vec![("id", Value::from("x")), ("name", Value::from("A")), ("age", Value::from(1))]);
+    let invalid = obj(vec![
+        ("id", Value::from("x")),
+        ("name", Value::from("A")),
+        ("age", Value::from(1)),
+    ]);
     bench("object (invalid, issue path)", N / 4, || {
         std::hint::black_box(user.parse_value(&invalid).unwrap_err());
     });

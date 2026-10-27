@@ -161,17 +161,20 @@ pub fn literal<L: IntoLiterals>(lits: L) -> Schema<Value> {
     let expected_strings: Vec<String> = expected_values.iter().map(|v| v.to_string()).collect();
     let allowed = expected_values.clone();
 
-    Schema::new(SchemaDef::Literal(expected_values.clone()), move |val, ctx| {
-        if allowed.contains(val) {
-            Some(val.clone())
-        } else {
-            ctx.add_issue(
-                ZodIssueCode::InvalidValue {
-                    values: expected_strings.clone(),
-                },
-                None,
-            );
-            None
-        }
-    })
+    Schema::new(
+        SchemaDef::Literal(expected_values.clone()),
+        move |val, ctx| {
+            if allowed.contains(val) {
+                Some(val.clone())
+            } else {
+                ctx.add_issue(
+                    ZodIssueCode::InvalidValue {
+                        values: expected_strings.clone(),
+                    },
+                    None,
+                );
+                None
+            }
+        },
+    )
 }

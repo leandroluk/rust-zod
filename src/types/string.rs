@@ -43,12 +43,16 @@ impl Schema<String> {
 
     pub fn min_with(self, minimum: usize, opts: impl FnOnce(CheckOpts) -> CheckOpts) -> Self {
         self.push_check(
-            Check::Min { value: minimum as f64, inclusive: true },
+            Check::Min {
+                value: minimum as f64,
+                inclusive: true,
+            },
             opts(CheckOpts::default()),
             move |v| match str_of(v) {
-                Some(s) if s.chars().count() < minimum => {
-                    Some((too_small(SizeOrigin::String, minimum as f64, true, false), None))
-                }
+                Some(s) if s.chars().count() < minimum => Some((
+                    too_small(SizeOrigin::String, minimum as f64, true, false),
+                    None,
+                )),
                 _ => None,
             },
         )
@@ -61,12 +65,16 @@ impl Schema<String> {
 
     pub fn max_with(self, maximum: usize, opts: impl FnOnce(CheckOpts) -> CheckOpts) -> Self {
         self.push_check(
-            Check::Max { value: maximum as f64, inclusive: true },
+            Check::Max {
+                value: maximum as f64,
+                inclusive: true,
+            },
             opts(CheckOpts::default()),
             move |v| match str_of(v) {
-                Some(s) if s.chars().count() > maximum => {
-                    Some((too_big(SizeOrigin::String, maximum as f64, true, false), None))
-                }
+                Some(s) if s.chars().count() > maximum => Some((
+                    too_big(SizeOrigin::String, maximum as f64, true, false),
+                    None,
+                )),
                 _ => None,
             },
         )
@@ -78,12 +86,16 @@ impl Schema<String> {
     }
 
     pub fn length_with(self, len: usize, opts: impl FnOnce(CheckOpts) -> CheckOpts) -> Self {
-        self.push_check(Check::Length(len), opts(CheckOpts::default()), move |v| match str_of(v) {
-            Some(s) if s.chars().count() != len => {
-                Some((too_small(SizeOrigin::String, len as f64, true, true), None))
-            }
-            _ => None,
-        })
+        self.push_check(
+            Check::Length(len),
+            opts(CheckOpts::default()),
+            move |v| match str_of(v) {
+                Some(s) if s.chars().count() != len => {
+                    Some((too_small(SizeOrigin::String, len as f64, true, true), None))
+                }
+                _ => None,
+            },
+        )
     }
 
     /// Disallow empty string (shorthand for `.min(1)`).
@@ -98,14 +110,26 @@ impl Schema<String> {
     }
 
     #[cfg(feature = "regex")]
-    pub fn regex_with(self, pattern: impl AsRef<str>, opts: impl FnOnce(CheckOpts) -> CheckOpts) -> Self {
+    pub fn regex_with(
+        self,
+        pattern: impl AsRef<str>,
+        opts: impl FnOnce(CheckOpts) -> CheckOpts,
+    ) -> Self {
         let source = pattern.as_ref().to_string();
-        let re = regex::Regex::new(&source).unwrap_or_else(|e| panic!("invalid regex `{}`: {}", source, e));
+        let re = regex::Regex::new(&source)
+            .unwrap_or_else(|e| panic!("invalid regex `{}`: {}", source, e));
         let src = source.clone();
-        self.push_check(Check::Pattern(source), opts(CheckOpts::default()), move |v| match str_of(v) {
-            Some(s) if !re.is_match(s) => Some((invalid_format("regex", None, None, None, Some(src.clone())), None)),
-            _ => None,
-        })
+        self.push_check(
+            Check::Pattern(source),
+            opts(CheckOpts::default()),
+            move |v| match str_of(v) {
+                Some(s) if !re.is_match(s) => Some((
+                    invalid_format("regex", None, None, None, Some(src.clone())),
+                    None,
+                )),
+                _ => None,
+            },
+        )
     }
 
     /// Require substring inclusion.
@@ -113,15 +137,23 @@ impl Schema<String> {
         self.includes_with(expected, |e| e)
     }
 
-    pub fn includes_with(self, expected: impl Into<String>, opts: impl FnOnce(CheckOpts) -> CheckOpts) -> Self {
+    pub fn includes_with(
+        self,
+        expected: impl Into<String>,
+        opts: impl FnOnce(CheckOpts) -> CheckOpts,
+    ) -> Self {
         let expected = expected.into();
-        self.push_check(Check::Includes(expected.clone()), opts(CheckOpts::default()), move |v| match str_of(v) {
-            Some(s) if !s.contains(&expected) => Some((
-                invalid_format("string", None, None, Some(expected.clone()), None),
-                Some(format!("String must include '{}'", expected)),
-            )),
-            _ => None,
-        })
+        self.push_check(
+            Check::Includes(expected.clone()),
+            opts(CheckOpts::default()),
+            move |v| match str_of(v) {
+                Some(s) if !s.contains(&expected) => Some((
+                    invalid_format("string", None, None, Some(expected.clone()), None),
+                    Some(format!("String must include '{}'", expected)),
+                )),
+                _ => None,
+            },
+        )
     }
 
     /// Require string to start with prefix.
@@ -129,15 +161,23 @@ impl Schema<String> {
         self.starts_with_with(prefix, |e| e)
     }
 
-    pub fn starts_with_with(self, prefix: impl Into<String>, opts: impl FnOnce(CheckOpts) -> CheckOpts) -> Self {
+    pub fn starts_with_with(
+        self,
+        prefix: impl Into<String>,
+        opts: impl FnOnce(CheckOpts) -> CheckOpts,
+    ) -> Self {
         let prefix = prefix.into();
-        self.push_check(Check::StartsWith(prefix.clone()), opts(CheckOpts::default()), move |v| match str_of(v) {
-            Some(s) if !s.starts_with(&prefix) => Some((
-                invalid_format("string", Some(prefix.clone()), None, None, None),
-                Some(format!("String must start with '{}'", prefix)),
-            )),
-            _ => None,
-        })
+        self.push_check(
+            Check::StartsWith(prefix.clone()),
+            opts(CheckOpts::default()),
+            move |v| match str_of(v) {
+                Some(s) if !s.starts_with(&prefix) => Some((
+                    invalid_format("string", Some(prefix.clone()), None, None, None),
+                    Some(format!("String must start with '{}'", prefix)),
+                )),
+                _ => None,
+            },
+        )
     }
 
     /// Require string to end with suffix.
@@ -145,36 +185,48 @@ impl Schema<String> {
         self.ends_with_with(suffix, |e| e)
     }
 
-    pub fn ends_with_with(self, suffix: impl Into<String>, opts: impl FnOnce(CheckOpts) -> CheckOpts) -> Self {
+    pub fn ends_with_with(
+        self,
+        suffix: impl Into<String>,
+        opts: impl FnOnce(CheckOpts) -> CheckOpts,
+    ) -> Self {
         let suffix = suffix.into();
-        self.push_check(Check::EndsWith(suffix.clone()), opts(CheckOpts::default()), move |v| match str_of(v) {
-            Some(s) if !s.ends_with(&suffix) => Some((
-                invalid_format("string", None, Some(suffix.clone()), None, None),
-                Some(format!("String must end with '{}'", suffix)),
-            )),
-            _ => None,
-        })
+        self.push_check(
+            Check::EndsWith(suffix.clone()),
+            opts(CheckOpts::default()),
+            move |v| match str_of(v) {
+                Some(s) if !s.ends_with(&suffix) => Some((
+                    invalid_format("string", None, Some(suffix.clone()), None, None),
+                    Some(format!("String must end with '{}'", suffix)),
+                )),
+                _ => None,
+            },
+        )
     }
 
     /// Enforce all lowercase characters.
     pub fn lowercase(self) -> Self {
-        self.push_check(Check::Lowercase, CheckOpts::default(), |v| match str_of(v) {
-            Some(s) if s.chars().any(|c| c.is_uppercase()) => Some((
-                invalid_format("lowercase", None, None, None, None),
-                Some("String must be lowercase".to_string()),
-            )),
-            _ => None,
+        self.push_check(Check::Lowercase, CheckOpts::default(), |v| {
+            match str_of(v) {
+                Some(s) if s.chars().any(|c| c.is_uppercase()) => Some((
+                    invalid_format("lowercase", None, None, None, None),
+                    Some("String must be lowercase".to_string()),
+                )),
+                _ => None,
+            }
         })
     }
 
     /// Enforce all uppercase characters.
     pub fn uppercase(self) -> Self {
-        self.push_check(Check::Uppercase, CheckOpts::default(), |v| match str_of(v) {
-            Some(s) if s.chars().any(|c| c.is_lowercase()) => Some((
-                invalid_format("uppercase", None, None, None, None),
-                Some("String must be uppercase".to_string()),
-            )),
-            _ => None,
+        self.push_check(Check::Uppercase, CheckOpts::default(), |v| {
+            match str_of(v) {
+                Some(s) if s.chars().any(|c| c.is_lowercase()) => Some((
+                    invalid_format("uppercase", None, None, None, None),
+                    Some("String must be uppercase".to_string()),
+                )),
+                _ => None,
+            }
         })
     }
 
@@ -245,34 +297,35 @@ pub fn string_format(
             checks: Vec::new(),
         },
         move |val, ctx| match val {
-        Value::String(s) => {
-            if check_fn(s) {
-                Some(Value::String(s.clone()))
-            } else {
+            Value::String(s) => {
+                if check_fn(s) {
+                    Some(Value::String(s.clone()))
+                } else {
+                    ctx.add_issue(
+                        ZodIssueCode::InvalidFormat {
+                            format: format_name.into(),
+                            pattern: None,
+                            prefix: None,
+                            suffix: None,
+                            includes: None,
+                        },
+                        None,
+                    );
+                    None
+                }
+            }
+            _ => {
                 ctx.add_issue(
-                    ZodIssueCode::InvalidFormat {
-                        format: format_name.into(),
-                        pattern: None,
-                        prefix: None,
-                        suffix: None,
-                        includes: None,
+                    ZodIssueCode::InvalidType {
+                        expected: "string".into(),
+                        received: val.type_name().into(),
                     },
                     None,
                 );
                 None
             }
-        }
-        _ => {
-            ctx.add_issue(
-                ZodIssueCode::InvalidType {
-                    expected: "string".into(),
-                    received: val.type_name().into(),
-                },
-                None,
-            );
-            None
-        }
-    })
+        },
+    )
 }
 
 // ----------------------------------------------------------------------------
@@ -329,22 +382,28 @@ pub fn guid() -> Schema<String> {
 
 pub fn nanoid() -> Schema<String> {
     string_format("nanoid", |s| {
-        s.len() == 21 && s.chars().all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-')
+        s.len() == 21
+            && s.chars()
+                .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-')
     })
 }
 
 pub fn cuid2() -> Schema<String> {
     string_format("cuid2", |s| {
-        !s.is_empty() && s.chars().next().is_some_and(|c| c.is_ascii_lowercase()) && s.chars().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit())
+        !s.is_empty()
+            && s.chars().next().is_some_and(|c| c.is_ascii_lowercase())
+            && s.chars()
+                .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit())
     })
 }
 
 pub fn ulid() -> Schema<String> {
     string_format("ulid", |s| {
-        s.len() == 26 && s.chars().all(|c| {
-            matches!(c, '0'..='9' | 'A'..='H' | 'J'..='K' | 'M'..='N' | 'P'..='T' | 'V'..='Z' |
+        s.len() == 26
+            && s.chars().all(|c| {
+                matches!(c, '0'..='9' | 'A'..='H' | 'J'..='K' | 'M'..='N' | 'P'..='T' | 'V'..='Z' |
                         'a'..='h' | 'j'..='k' | 'm'..='n' | 'p'..='t' | 'v'..='z')
-        })
+            })
     })
 }
 
@@ -398,7 +457,11 @@ pub fn http_url() -> Schema<String> {
 
 pub fn hostname() -> Schema<String> {
     string_format("hostname", |s| {
-        !s.is_empty() && s.len() <= 253 && !s.starts_with('-') && !s.ends_with('-') && !s.contains("..")
+        !s.is_empty()
+            && s.len() <= 253
+            && !s.starts_with('-')
+            && !s.ends_with('-')
+            && !s.contains("..")
     })
 }
 
@@ -436,7 +499,10 @@ pub fn mac() -> Schema<String> {
         } else {
             return false;
         };
-        parts.len() == 6 && parts.iter().all(|p| p.len() == 2 && p.chars().all(is_hex_char))
+        parts.len() == 6
+            && parts
+                .iter()
+                .all(|p| p.len() == 2 && p.chars().all(is_hex_char))
     })
 }
 
@@ -492,26 +558,31 @@ pub fn base64() -> Schema<String> {
         if len % 4 != 0 {
             return false;
         }
-        s.chars().all(|c| c.is_ascii_alphanumeric() || c == '+' || c == '/' || c == '=')
+        s.chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '+' || c == '/' || c == '=')
     })
 }
 
 pub fn base64url() -> Schema<String> {
     string_format("base64url", |s| {
-        s.chars().all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_' || c == '=')
+        s.chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_' || c == '=')
     })
 }
 
 pub fn hex() -> Schema<String> {
-    string_format("hex", |s| {
-        !s.is_empty() && s.chars().all(is_hex_char)
-    })
+    string_format("hex", |s| !s.is_empty() && s.chars().all(is_hex_char))
 }
 
 pub fn jwt() -> Schema<String> {
     string_format("jwt", |s| {
         let parts: Vec<&str> = s.split('.').collect();
-        parts.len() == 3 && parts.iter().all(|p| !p.is_empty() && p.chars().all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_'))
+        parts.len() == 3
+            && parts.iter().all(|p| {
+                !p.is_empty()
+                    && p.chars()
+                        .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
+            })
     })
 }
 
@@ -523,13 +594,20 @@ pub fn emoji() -> Schema<String> {
 
 pub fn e164() -> Schema<String> {
     string_format("e164", |s| {
-        s.starts_with('+') && s.len() >= 8 && s.len() <= 16 && s[1..].chars().all(|c| c.is_ascii_digit())
+        s.starts_with('+')
+            && s.len() >= 8
+            && s.len() <= 16
+            && s[1..].chars().all(|c| c.is_ascii_digit())
     })
 }
 
 pub fn credit_card() -> Schema<String> {
     string_format("credit_card", |s| {
-        let digits: Vec<u32> = s.chars().filter(|c| c.is_ascii_digit()).filter_map(|c| c.to_digit(10)).collect();
+        let digits: Vec<u32> = s
+            .chars()
+            .filter(|c| c.is_ascii_digit())
+            .filter_map(|c| c.to_digit(10))
+            .collect();
         if digits.len() < 13 || digits.len() > 19 {
             return false;
         }
@@ -554,7 +632,10 @@ pub fn credit_card() -> Schema<String> {
 pub fn iban() -> Schema<String> {
     string_format("iban", |s| {
         let clean: String = s.chars().filter(|c| !c.is_whitespace()).collect();
-        clean.len() >= 15 && clean.len() <= 34 && clean[..2].chars().all(|c| c.is_ascii_uppercase()) && clean[2..4].chars().all(|c| c.is_ascii_digit())
+        clean.len() >= 15
+            && clean.len() <= 34
+            && clean[..2].chars().all(|c| c.is_ascii_uppercase())
+            && clean[2..4].chars().all(|c| c.is_ascii_digit())
     })
 }
 
@@ -590,10 +671,11 @@ pub mod iso {
                 return false;
             }
             let b = s.as_bytes();
-            b[4] == b'-' && b[7] == b'-' &&
-            b[..4].iter().all(|&c| (c as char).is_ascii_digit()) &&
-            b[5..7].iter().all(|&c| (c as char).is_ascii_digit()) &&
-            b[8..10].iter().all(|&c| (c as char).is_ascii_digit())
+            b[4] == b'-'
+                && b[7] == b'-'
+                && b[..4].iter().all(|&c| (c as char).is_ascii_digit())
+                && b[5..7].iter().all(|&c| (c as char).is_ascii_digit())
+                && b[8..10].iter().all(|&c| (c as char).is_ascii_digit())
         })
     }
 
@@ -617,8 +699,6 @@ pub mod iso {
     }
 
     pub fn duration() -> Schema<String> {
-        string_format("iso_duration", |s| {
-            s.starts_with('P') || s.starts_with('p')
-        })
+        string_format("iso_duration", |s| s.starts_with('P') || s.starts_with('p'))
     }
 }

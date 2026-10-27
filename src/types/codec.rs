@@ -1,7 +1,7 @@
 // @spec REQ-PIPE-004
 // @spec REQ-PIPE-005
 use crate::schema::{
-    next_step_id, Aux, AsyncOutcome, AsyncStepFn, Direction, ParseContext, Schema, SchemaDef,
+    next_step_id, AsyncOutcome, AsyncStepFn, Aux, Direction, ParseContext, Schema, SchemaDef,
 };
 use crate::value::Value;
 use alloc::boxed::Box;
@@ -136,10 +136,20 @@ impl Default for StringBoolCodec {
     fn default() -> Self {
         Self {
             truthy: alloc::vec![
-                "true".into(), "1".into(), "yes".into(), "on".into(), "y".into(), "enabled".into()
+                "true".into(),
+                "1".into(),
+                "yes".into(),
+                "on".into(),
+                "y".into(),
+                "enabled".into()
             ],
             falsy: alloc::vec![
-                "false".into(), "0".into(), "no".into(), "off".into(), "n".into(), "disabled".into()
+                "false".into(),
+                "0".into(),
+                "no".into(),
+                "off".into(),
+                "n".into(),
+                "disabled".into()
             ],
             case_sensitive: false,
         }
@@ -196,7 +206,11 @@ impl StringBoolCodec {
                     } else {
                         ctx.add_issue(
                             crate::error::ZodIssueCode::InvalidValue {
-                                values: truthy_decode.iter().chain(falsy_decode.iter()).cloned().collect(),
+                                values: truthy_decode
+                                    .iter()
+                                    .chain(falsy_decode.iter())
+                                    .cloned()
+                                    .collect(),
                             },
                             Some("Expected boolean string value"),
                         );
@@ -206,8 +220,12 @@ impl StringBoolCodec {
                 _ => None,
             },
             move |val, _ctx| match val {
-                Value::Bool(true) => Some(Value::String((truthy.first().cloned().unwrap_or_else(|| "true".into())).into())),
-                Value::Bool(false) => Some(Value::String((falsy.first().cloned().unwrap_or_else(|| "false".into())).into())),
+                Value::Bool(true) => Some(Value::String(
+                    (truthy.first().cloned().unwrap_or_else(|| "true".into())).into(),
+                )),
+                Value::Bool(false) => Some(Value::String(
+                    (falsy.first().cloned().unwrap_or_else(|| "false".into())).into(),
+                )),
                 _ => None,
             },
         )
@@ -233,7 +251,10 @@ pub mod codecs {
                 Value::String(s) => match s.trim().parse::<i64>() {
                     Ok(i) => Some(Value::Int(i)),
                     Err(_) => {
-                        ctx.add_issue(ZodIssueCode::format("integer_string"), Some("Expected valid integer string"));
+                        ctx.add_issue(
+                            ZodIssueCode::format("integer_string"),
+                            Some("Expected valid integer string"),
+                        );
                         None
                     }
                 },
@@ -255,7 +276,10 @@ pub mod codecs {
                 Value::String(s) => match s.trim().parse::<f64>() {
                     Ok(f) if !f.is_nan() && !f.is_infinite() => Some(Value::Float(f)),
                     _ => {
-                        ctx.add_issue(ZodIssueCode::format("number_string"), Some("Expected valid number string"));
+                        ctx.add_issue(
+                            ZodIssueCode::format("number_string"),
+                            Some("Expected valid number string"),
+                        );
                         None
                     }
                 },
@@ -310,7 +334,8 @@ pub mod codecs {
 
     /// `base64 text <-> bytes`.
     pub fn base64_bytes() -> Schema<Vec<u8>> {
-        const ALPHABET: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+        const ALPHABET: &[u8; 64] =
+            b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
         fn decode(s: &str) -> Option<Vec<u8>> {
             let mut out = Vec::new();
@@ -332,7 +357,11 @@ pub mod codecs {
         fn encode(bytes: &[u8]) -> String {
             let mut out = String::new();
             for chunk in bytes.chunks(3) {
-                let b = [chunk[0], *chunk.get(1).unwrap_or(&0), *chunk.get(2).unwrap_or(&0)];
+                let b = [
+                    chunk[0],
+                    *chunk.get(1).unwrap_or(&0),
+                    *chunk.get(2).unwrap_or(&0),
+                ];
                 let n = ((b[0] as u32) << 16) | ((b[1] as u32) << 8) | b[2] as u32;
                 for i in 0..4 {
                     if i <= chunk.len() {

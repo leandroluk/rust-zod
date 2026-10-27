@@ -59,7 +59,9 @@ impl Value {
         match self {
             Value::Int(i) => Some(*i),
             Value::Uint(u) => i64::try_from(*u).ok(),
-            Value::Float(f) if f.fract() == 0.0 && *f >= i64::MIN as f64 && *f <= i64::MAX as f64 => {
+            Value::Float(f)
+                if f.fract() == 0.0 && *f >= i64::MIN as f64 && *f <= i64::MAX as f64 =>
+            {
                 Some(*f as i64)
             }
             _ => None,
@@ -387,7 +389,10 @@ mod tests {
         assert_eq!(Value::from("hello"), Value::String("hello".into()));
         assert_eq!(Value::from(true), Value::Bool(true));
         assert_eq!(Value::from(()), Value::Null);
-        assert_eq!(Value::from(vec![1, 2, 3]), Value::Array(vec![Value::Int(1), Value::Int(2), Value::Int(3)]));
+        assert_eq!(
+            Value::from(vec![1, 2, 3]),
+            Value::Array(vec![Value::Int(1), Value::Int(2), Value::Int(3)])
+        );
     }
 
     #[cfg(feature = "serde_json")]

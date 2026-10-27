@@ -67,22 +67,36 @@ impl Numeric for u64 {
 impl<N: Numeric> Schema<N> {
     fn bound_min(self, bound: N, inclusive: bool, opts: CheckOpts) -> Self {
         let b = bound.to_f64();
-        self.push_check(Check::Min { value: b, inclusive }, opts, move |v| match v.as_f64() {
-            Some(num) if (inclusive && num < b) || (!inclusive && num <= b) => {
-                Some((too_small(SizeOrigin::Number, b, inclusive, false), None))
-            }
-            _ => None,
-        })
+        self.push_check(
+            Check::Min {
+                value: b,
+                inclusive,
+            },
+            opts,
+            move |v| match v.as_f64() {
+                Some(num) if (inclusive && num < b) || (!inclusive && num <= b) => {
+                    Some((too_small(SizeOrigin::Number, b, inclusive, false), None))
+                }
+                _ => None,
+            },
+        )
     }
 
     fn bound_max(self, bound: N, inclusive: bool, opts: CheckOpts) -> Self {
         let b = bound.to_f64();
-        self.push_check(Check::Max { value: b, inclusive }, opts, move |v| match v.as_f64() {
-            Some(num) if (inclusive && num > b) || (!inclusive && num >= b) => {
-                Some((too_big(SizeOrigin::Number, b, inclusive, false), None))
-            }
-            _ => None,
-        })
+        self.push_check(
+            Check::Max {
+                value: b,
+                inclusive,
+            },
+            opts,
+            move |v| match v.as_f64() {
+                Some(num) if (inclusive && num > b) || (!inclusive && num >= b) => {
+                    Some((too_big(SizeOrigin::Number, b, inclusive, false), None))
+                }
+                _ => None,
+            },
+        )
     }
 
     pub fn gt(self, bound: N) -> Self {
@@ -155,17 +169,21 @@ impl<N: Numeric> Schema<N> {
 
     pub fn multiple_of_with(self, step: N, opts: impl FnOnce(CheckOpts) -> CheckOpts) -> Self {
         let divisor = step.to_f64();
-        self.push_check(Check::MultipleOf(divisor), opts(CheckOpts::default()), move |v| match v.as_f64() {
-            Some(num) => {
-                let rem = (num % divisor).abs();
-                if rem > 1e-9 && (rem - divisor.abs()).abs() > 1e-9 {
-                    Some((ZodIssueCode::NotMultipleOf { divisor }, None))
-                } else {
-                    None
+        self.push_check(
+            Check::MultipleOf(divisor),
+            opts(CheckOpts::default()),
+            move |v| match v.as_f64() {
+                Some(num) => {
+                    let rem = (num % divisor).abs();
+                    if rem > 1e-9 && (rem - divisor.abs()).abs() > 1e-9 {
+                        Some((ZodIssueCode::NotMultipleOf { divisor }, None))
+                    } else {
+                        None
+                    }
                 }
-            }
-            None => None,
-        })
+                None => None,
+            },
+        )
     }
 }
 

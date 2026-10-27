@@ -9,6 +9,7 @@ use crate::types::object::ObjectShape;
 use crate::value::Value;
 use alloc::boxed::Box;
 use alloc::collections::BTreeMap;
+#[cfg(feature = "serde_json")]
 use alloc::format;
 use alloc::string::{String, ToString};
 use alloc::sync::Arc;
@@ -30,9 +31,15 @@ use std::sync::{Mutex, OnceLock};
 #[derive(Debug, Clone, PartialEq)]
 pub enum Check {
     /// Lower bound. Counts characters (string), items (array) or the value itself (number).
-    Min { value: f64, inclusive: bool },
+    Min {
+        value: f64,
+        inclusive: bool,
+    },
     /// Upper bound. Counts characters (string), items (array) or the value itself (number).
-    Max { value: f64, inclusive: bool },
+    Max {
+        value: f64,
+        inclusive: bool,
+    },
     Length(usize),
     MultipleOf(f64),
     Pattern(String),
@@ -308,7 +315,8 @@ impl ParseContext {
     }
 
     pub fn push_key(&mut self, key: impl AsRef<str>) {
-        self.path.push(PathSegment::Key(CompactString::new(key.as_ref())));
+        self.path
+            .push(PathSegment::Key(CompactString::new(key.as_ref())));
     }
 
     pub fn push_index(&mut self, index: usize) {
@@ -355,7 +363,12 @@ impl ParseContext {
     }
 
     /// Resolve (or schedule) an async step. `None` means "suspended/failed": the caller must bail out.
-    pub(crate) fn async_step(&mut self, id: usize, input: &Value, step: &AsyncStepFn) -> Option<AsyncOutcome> {
+    pub(crate) fn async_step(
+        &mut self,
+        id: usize,
+        input: &Value,
+        step: &AsyncStepFn,
+    ) -> Option<AsyncOutcome> {
         let rt = match &self.rt {
             Some(rt) => rt.clone(),
             None => {
@@ -517,7 +530,12 @@ impl<T> Schema<T> {
         self.validator.clone()
     }
 
-    pub(crate) fn from_parts(def: Arc<SchemaDef>, meta: Meta, validator: ValidatorFn, aux: Aux) -> Self {
+    pub(crate) fn from_parts(
+        def: Arc<SchemaDef>,
+        meta: Meta,
+        validator: ValidatorFn,
+        aux: Aux,
+    ) -> Self {
         Self {
             def,
             meta,
@@ -534,7 +552,12 @@ impl<T> Schema<T> {
 
     /// Clone this schema with a replaced validator (AST, metadata and structure are kept).
     pub(crate) fn with_validator(&self, validator: ValidatorFn) -> Self {
-        Self::from_parts(self.def.clone(), self.meta.clone(), validator, self.aux.clone())
+        Self::from_parts(
+            self.def.clone(),
+            self.meta.clone(),
+            validator,
+            self.aux.clone(),
+        )
     }
 
     /// Wrapper schema (optional, nullable, ...): new AST node, fresh metadata, inner schema remembered.
@@ -553,7 +576,12 @@ impl<T: 'static> Schema<T> {
         def: SchemaDef,
         validator: impl Fn(&Value, &mut ParseContext) -> Option<Value> + Send + Sync + 'static,
     ) -> Self {
-        Self::from_parts(Arc::new(def), Meta::default(), Arc::new(validator), Aux::None)
+        Self::from_parts(
+            Arc::new(def),
+            Meta::default(),
+            Arc::new(validator),
+            Aux::None,
+        )
     }
 
     /// Attach metadata via the fluent Closure Builder pattern `.meta(|m| ...)`.
@@ -603,7 +631,11 @@ impl<T: 'static> Schema<T> {
             // Checks describe the output side: on `.encode()` they run on the incoming value, before the
             // reverse mapping; on decode they run on the mapped result.
             let encoding = ctx.direction == Direction::Encode;
-            let res = if encoding { None } else { Some(inner(val, ctx)?) };
+            let res = if encoding {
+                None
+            } else {
+                Some(inner(val, ctx)?)
+            };
             let subject = res.as_ref().unwrap_or(val);
             if let Some((code, default_msg)) = failure(subject) {
                 let msg = opts.error.as_deref().or(default_msg.as_deref());
@@ -819,8 +851,9 @@ impl<T: 'static> Schema<T> {
             SchemaDef::Transform(self.def.clone()),
             Arc::new(move |val, ctx| {
                 if ctx.direction == Direction::Encode {
-                    ctx.failure
-                        .get_or_insert(Failure::Encode("`.transform()` is one-way and cannot be encoded".into()));
+                    ctx.failure.get_or_insert(Failure::Encode(
+                        "`.transform()` is one-way and cannot be encoded".into(),
+                    ));
                     return None;
                 }
                 let res = inner(val, ctx)?;
@@ -845,8 +878,9 @@ impl<T: 'static> Schema<T> {
             SchemaDef::Transform(self.def.clone()),
             Arc::new(move |val, ctx| {
                 if ctx.direction == Direction::Encode {
-                    ctx.failure
-                        .get_or_insert(Failure::Encode("`.transform_async()` is one-way and cannot be encoded".into()));
+                    ctx.failure.get_or_insert(Failure::Encode(
+                        "`.transform_async()` is one-way and cannot be encoded".into(),
+                    ));
                     return None;
                 }
                 let res = inner(val, ctx)?;
@@ -866,8 +900,9 @@ impl<T: 'static> Schema<T> {
         let inner = self.validator.clone();
         self.with_validator(Arc::new(move |val, ctx| {
             if ctx.direction == Direction::Encode {
-                ctx.failure
-                    .get_or_insert(Failure::Encode("`.preprocess()` is one-way and cannot be encoded".into()));
+                ctx.failure.get_or_insert(Failure::Encode(
+                    "`.preprocess()` is one-way and cannot be encoded".into(),
+                ));
                 return None;
             }
             let transformed = preprocess_fn(val);
@@ -883,7 +918,10 @@ impl<T: 'static> Schema<T> {
             input: self.def.clone(),
             output: target.def.clone(),
         };
-        let aux = Aux::Pipe(Arc::new((self.into_type::<Value>(), target.clone().into_type::<Value>())));
+        let aux = Aux::Pipe(Arc::new((
+            self.into_type::<Value>(),
+            target.clone().into_type::<Value>(),
+        )));
 
         Schema::from_parts(
             Arc::new(def),
@@ -931,14 +969,24 @@ impl<T: 'static> Schema<Option<T>> {
 // ----------------------------------------------------------------------------
 
 impl<T: 'static> Schema<T> {
-    fn run(&self, input: &Value, options: ParseOptions, direction: Direction) -> Result<Value, ZodError> {
+    fn run(
+        &self,
+        input: &Value,
+        options: ParseOptions,
+        direction: Direction,
+    ) -> Result<Value, ZodError> {
         let mut ctx = ParseContext::with_options(options);
         ctx.direction = direction;
         let res = (self.validator)(input, &mut ctx);
         ctx.finish(res)
     }
 
-    async fn run_async(&self, input: &Value, options: ParseOptions, direction: Direction) -> Result<Value, ZodError> {
+    async fn run_async(
+        &self,
+        input: &Value,
+        options: ParseOptions,
+        direction: Direction,
+    ) -> Result<Value, ZodError> {
         let state: AsyncRuntime = Arc::new(Mutex::new(AsyncState::default()));
         loop {
             let mut ctx = ParseContext::with_options(options);
@@ -972,13 +1020,18 @@ impl<T: 'static> Schema<T> {
     }
 
     /// Parse into the raw validated `Value` with explicit options (`ParseOptions` or `|o| o.locale(..)`).
-    pub fn parse_value_with(&self, input: &Value, options: impl IntoParseOptions) -> Result<Value, ZodError> {
+    pub fn parse_value_with(
+        &self,
+        input: &Value,
+        options: impl IntoParseOptions,
+    ) -> Result<Value, ZodError> {
         self.run(input, options.into_options(), Direction::Decode)
     }
 
     /// Async parse into the raw validated `Value` (runs `refine_async` / `transform_async` steps).
     pub async fn parse_value_async(&self, input: &Value) -> Result<Value, ZodError> {
-        self.run_async(input, ParseOptions::default(), Direction::Decode).await
+        self.run_async(input, ParseOptions::default(), Direction::Decode)
+            .await
     }
 
     /// Run the schema in reverse (output -> input), returning the raw `Value`.
@@ -986,12 +1039,17 @@ impl<T: 'static> Schema<T> {
         self.run(input, ParseOptions::default(), Direction::Encode)
     }
 
-    pub fn encode_with(&self, input: &Value, options: impl IntoParseOptions) -> Result<Value, ZodError> {
+    pub fn encode_with(
+        &self,
+        input: &Value,
+        options: impl IntoParseOptions,
+    ) -> Result<Value, ZodError> {
         self.run(input, options.into_options(), Direction::Encode)
     }
 
     pub async fn encode_async(&self, input: &Value) -> Result<Value, ZodError> {
-        self.run_async(input, ParseOptions::default(), Direction::Encode).await
+        self.run_async(input, ParseOptions::default(), Direction::Encode)
+            .await
     }
 
     /// `.decode()` is `.parse()` (kept for symmetry with `.encode()`), returning the raw `Value`.
@@ -1073,7 +1131,9 @@ fn fast_path<Target: 'static>(v: Value) -> Result<Target, Value> {
 }
 
 #[cfg(feature = "serde_json")]
-fn convert<Target: serde::de::DeserializeOwned + 'static>(validated: Value) -> Result<Target, ZodError> {
+fn convert<Target: serde::de::DeserializeOwned + 'static>(
+    validated: Value,
+) -> Result<Target, ZodError> {
     let validated = match fast_path::<Target>(validated) {
         Ok(t) => return Ok(t),
         Err(v) => v,
@@ -1130,7 +1190,10 @@ impl<T: 'static> Schema<T> {
     }
 
     /// Universal deserialization from validated Value into any strongly typed Rust struct/enum `Target`.
-    pub fn parse_into<Target: serde::de::DeserializeOwned + 'static>(&self, input: &Value) -> Result<Target, ZodError> {
+    pub fn parse_into<Target: serde::de::DeserializeOwned + 'static>(
+        &self,
+        input: &Value,
+    ) -> Result<Target, ZodError> {
         convert::<Target>(self.parse_value(input)?)
     }
 
@@ -1149,12 +1212,18 @@ impl<T: 'static> Schema<T> {
         convert::<Target>(self.parse_value_async(input).await?)
     }
 
-    pub fn decode_into<Target: serde::de::DeserializeOwned + 'static>(&self, input: &Value) -> Result<Target, ZodError> {
+    pub fn decode_into<Target: serde::de::DeserializeOwned + 'static>(
+        &self,
+        input: &Value,
+    ) -> Result<Target, ZodError> {
         self.parse_into::<Target>(input)
     }
 
     /// Encode, then deserialize the result (the schema's *input* side) into `Target`.
-    pub fn encode_into<Target: serde::de::DeserializeOwned + 'static>(&self, input: &Value) -> Result<Target, ZodError> {
+    pub fn encode_into<Target: serde::de::DeserializeOwned + 'static>(
+        &self,
+        input: &Value,
+    ) -> Result<Target, ZodError> {
         convert::<Target>(self.encode(input)?)
     }
 }
@@ -1203,6 +1272,9 @@ mod tests {
         let err_pt2 = string_schema
             .parse_with(&Value::from(123), |o: ParseOptions| o.locale(Locale::PtBr))
             .unwrap_err();
-        assert_eq!(err_pt2.issues[0].message, "Esperado string, recebido number");
+        assert_eq!(
+            err_pt2.issues[0].message,
+            "Esperado string, recebido number"
+        );
     }
 }

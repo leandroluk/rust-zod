@@ -262,8 +262,14 @@ pub fn format_issue_message(code: &ZodIssueCode, locale: Locale) -> String {
         },
         ZodIssueCode::UnrecognizedKeys { keys } => match locale {
             Locale::En => format!("Unrecognized key(s) in object: '{}'", keys.join("', '")),
-            Locale::PtBr => format!("Chave(s) desconhecida(s) no objeto: '{}'", keys.join("', '")),
-            Locale::Es => format!("Clave(s) no reconocida(s) en el objeto: '{}'", keys.join("', '")),
+            Locale::PtBr => format!(
+                "Chave(s) desconhecida(s) no objeto: '{}'",
+                keys.join("', '")
+            ),
+            Locale::Es => format!(
+                "Clave(s) no reconocida(s) en el objeto: '{}'",
+                keys.join("', '")
+            ),
         },
         ZodIssueCode::InvalidUnion { .. } => match locale {
             Locale::En => "Invalid input for union".into(),
@@ -283,7 +289,10 @@ pub fn format_issue_message(code: &ZodIssueCode, locale: Locale) -> String {
         ZodIssueCode::InvalidValue { values } => match locale {
             Locale::En => format!("Invalid option: expected one of '{}'", values.join("', '")),
             Locale::PtBr => format!("Opção inválida: esperado um de '{}'", values.join("', '")),
-            Locale::Es => format!("Opción inválida: se esperaba uno de '{}'", values.join("', '")),
+            Locale::Es => format!(
+                "Opción inválida: se esperaba uno de '{}'",
+                values.join("', '")
+            ),
         },
         ZodIssueCode::Custom { .. } => match locale {
             Locale::En => "Invalid input".into(),

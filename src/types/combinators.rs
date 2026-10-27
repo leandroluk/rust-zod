@@ -14,7 +14,9 @@ use core::any::TypeId;
 use std::collections::HashMap;
 use std::sync::{Mutex, OnceLock};
 
-fn parts<T: 'static, I: IntoIterator<Item = Schema<T>>>(options: I) -> (Vec<Arc<SchemaDef>>, Vec<ValidatorFn>) {
+fn parts<T: 'static, I: IntoIterator<Item = Schema<T>>>(
+    options: I,
+) -> (Vec<Arc<SchemaDef>>, Vec<ValidatorFn>) {
     options
         .into_iter()
         .map(|s| (s.def.clone(), s.validator_clone()))
@@ -98,7 +100,10 @@ pub fn xor<T: 'static, I: IntoIterator<Item = Schema<T>>>(options: I) -> Schema<
                     inclusive: false,
                     matches,
                 },
-                Some(&format!("Expected exactly one matching union option, matched {}", matches)),
+                Some(&format!(
+                    "Expected exactly one matching union option, matched {}",
+                    matches
+                )),
             );
             None
         }
@@ -216,7 +221,10 @@ fn shared_lazy(id: TypeId, make: impl FnOnce() -> LazyDef) -> Arc<LazyDef> {
         .get_or_init(|| Mutex::new(HashMap::new()))
         .lock()
         .unwrap_or_else(|e| e.into_inner());
-    registry.entry(id).or_insert_with(|| Arc::new(make())).clone()
+    registry
+        .entry(id)
+        .or_insert_with(|| Arc::new(make()))
+        .clone()
 }
 
 /// Lazy recursive schema: the closure runs once (`OnceLock`) on first use and is memoized.

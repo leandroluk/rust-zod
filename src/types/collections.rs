@@ -35,14 +35,24 @@ impl Schema<String> {
     pub fn extract<O: super::IntoOptions>(&self, subset: O) -> Self {
         let subset = subset.into_options();
         let current = self.options().unwrap_or_default();
-        crate::z::options(current.into_iter().filter(|o| subset.contains(o)).collect::<Vec<_>>())
+        crate::z::options(
+            current
+                .into_iter()
+                .filter(|o| subset.contains(o))
+                .collect::<Vec<_>>(),
+        )
     }
 
     /// Return a new options schema with the specified options excluded.
     pub fn exclude<O: super::IntoOptions>(&self, excluded: O) -> Self {
         let excluded = excluded.into_options();
         let current = self.options().unwrap_or_default();
-        crate::z::options(current.into_iter().filter(|o| !excluded.contains(o)).collect::<Vec<_>>())
+        crate::z::options(
+            current
+                .into_iter()
+                .filter(|o| !excluded.contains(o))
+                .collect::<Vec<_>>(),
+        )
     }
 }
 
@@ -64,9 +74,10 @@ impl<T: 'static> Schema<Vec<T>> {
             },
             opts(CheckOpts::default()),
             move |v| match v {
-                Value::Array(arr) if arr.len() < minimum => {
-                    Some((too_small(SizeOrigin::Array, minimum as f64, true, false), None))
-                }
+                Value::Array(arr) if arr.len() < minimum => Some((
+                    too_small(SizeOrigin::Array, minimum as f64, true, false),
+                    None,
+                )),
                 _ => None,
             },
         )
@@ -85,9 +96,10 @@ impl<T: 'static> Schema<Vec<T>> {
             },
             opts(CheckOpts::default()),
             move |v| match v {
-                Value::Array(arr) if arr.len() > maximum => {
-                    Some((too_big(SizeOrigin::Array, maximum as f64, true, false), None))
-                }
+                Value::Array(arr) if arr.len() > maximum => Some((
+                    too_big(SizeOrigin::Array, maximum as f64, true, false),
+                    None,
+                )),
                 _ => None,
             },
         )
@@ -99,12 +111,16 @@ impl<T: 'static> Schema<Vec<T>> {
     }
 
     pub fn length_with(self, len: usize, opts: impl FnOnce(CheckOpts) -> CheckOpts) -> Self {
-        self.push_check(Check::Length(len), opts(CheckOpts::default()), move |v| match v {
-            Value::Array(arr) if arr.len() != len => {
-                Some((too_small(SizeOrigin::Array, len as f64, true, true), None))
-            }
-            _ => None,
-        })
+        self.push_check(
+            Check::Length(len),
+            opts(CheckOpts::default()),
+            move |v| match v {
+                Value::Array(arr) if arr.len() != len => {
+                    Some((too_small(SizeOrigin::Array, len as f64, true, true), None))
+                }
+                _ => None,
+            },
+        )
     }
 
     /// Enforce at least 1 element.
@@ -210,7 +226,10 @@ fn build_tuple(items: Vec<Schema<Value>>, rest: Option<Schema<Value>>) -> Schema
                     )),
                 );
             } else if has_rest && values.len() < validators.len() {
-                ctx.add_issue(too_small(SizeOrigin::Array, validators.len() as f64, true, false), None);
+                ctx.add_issue(
+                    too_small(SizeOrigin::Array, validators.len() as f64, true, false),
+                    None,
+                );
             }
 
             let mut out = Vec::with_capacity(values.len());
@@ -254,7 +273,9 @@ impl<T: 'static> Schema<T> {
     /// Add a rest element schema to a tuple (variadic tail). Panics on non-tuple schemas.
     pub fn rest<R: 'static>(&self, rest_schema: Schema<R>) -> Schema<Vec<Value>> {
         match &self.aux {
-            Aux::Tuple(parts) => build_tuple(parts.items.clone(), Some(rest_schema.into_type::<Value>())).into_type(),
+            Aux::Tuple(parts) => {
+                build_tuple(parts.items.clone(), Some(rest_schema.into_type::<Value>())).into_type()
+            }
             _ => panic!("`.rest()` is only available on tuple schemas (z::tuple)"),
         }
     }
@@ -302,6 +323,9 @@ pub fn set<T: 'static>(element_schema: Schema<T>) -> Schema<Vec<T>> {
 // ----------------------------------------------------------------------------
 
 /// `z::map(key, value)`: keyed collection; in a JSON-like `Value` it is represented as an object.
-pub fn map<K: 'static, V: 'static>(key_schema: Schema<K>, value_schema: Schema<V>) -> Schema<BTreeMap<String, V>> {
+pub fn map<K: 'static, V: 'static>(
+    key_schema: Schema<K>,
+    value_schema: Schema<V>,
+) -> Schema<BTreeMap<String, V>> {
     crate::types::object::record(key_schema, value_schema)
 }

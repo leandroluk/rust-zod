@@ -20,7 +20,12 @@ use crate::error::{SizeOrigin, ZodIssueCode};
 use alloc::string::String;
 use alloc::vec::Vec;
 
-pub(crate) fn too_small(origin: SizeOrigin, minimum: f64, inclusive: bool, exact: bool) -> ZodIssueCode {
+pub(crate) fn too_small(
+    origin: SizeOrigin,
+    minimum: f64,
+    inclusive: bool,
+    exact: bool,
+) -> ZodIssueCode {
     ZodIssueCode::TooSmall {
         origin,
         minimum,
@@ -29,7 +34,12 @@ pub(crate) fn too_small(origin: SizeOrigin, minimum: f64, inclusive: bool, exact
     }
 }
 
-pub(crate) fn too_big(origin: SizeOrigin, maximum: f64, inclusive: bool, exact: bool) -> ZodIssueCode {
+pub(crate) fn too_big(
+    origin: SizeOrigin,
+    maximum: f64,
+    inclusive: bool,
+    exact: bool,
+) -> ZodIssueCode {
     ZodIssueCode::TooBig {
         origin,
         maximum,

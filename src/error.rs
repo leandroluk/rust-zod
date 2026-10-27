@@ -187,7 +187,10 @@ pub enum Failure {
 
 impl ZodError {
     pub fn new(issues: Vec<ZodIssue>) -> Self {
-        Self { issues, failure: None }
+        Self {
+            issues,
+            failure: None,
+        }
     }
 
     pub fn from_issue(issue: ZodIssue) -> Self {
@@ -360,7 +363,10 @@ mod tests {
                     expected: "string".into(),
                     received: "number".into(),
                 },
-                vec![PathSegment::Key("user".into()), PathSegment::Key("name".into())],
+                vec![
+                    PathSegment::Key("user".into()),
+                    PathSegment::Key("name".into()),
+                ],
                 "Expected string, received number",
             ),
             ZodIssue::new(
@@ -370,7 +376,10 @@ mod tests {
                     inclusive: true,
                     exact: false,
                 },
-                vec![PathSegment::Key("user".into()), PathSegment::Key("age".into())],
+                vec![
+                    PathSegment::Key("user".into()),
+                    PathSegment::Key("age".into()),
+                ],
                 "Number must be greater than or equal to 18",
             ),
             ZodIssue::new(

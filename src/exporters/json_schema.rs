@@ -22,7 +22,10 @@ pub enum JsonSchemaTarget {
 
 impl JsonSchemaTarget {
     fn is_openapi(&self) -> bool {
-        matches!(self, JsonSchemaTarget::OpenApi30 | JsonSchemaTarget::OpenApi31)
+        matches!(
+            self,
+            JsonSchemaTarget::OpenApi30 | JsonSchemaTarget::OpenApi31
+        )
     }
 
     /// Draft-04 style booleans for exclusive bounds, `nullable`, tuple `items` arrays.
@@ -117,8 +120,12 @@ fn regex_escape(text: &str) -> String {
 impl<'a> Exporter<'a> {
     fn ref_path(&self, name: &str) -> String {
         match self.opts.target {
-            JsonSchemaTarget::OpenApi30 | JsonSchemaTarget::OpenApi31 => format!("#/components/schemas/{}", name),
-            JsonSchemaTarget::Draft07 | JsonSchemaTarget::Draft04 => format!("#/definitions/{}", name),
+            JsonSchemaTarget::OpenApi30 | JsonSchemaTarget::OpenApi31 => {
+                format!("#/components/schemas/{}", name)
+            }
+            JsonSchemaTarget::Draft07 | JsonSchemaTarget::Draft04 => {
+                format!("#/definitions/{}", name)
+            }
             JsonSchemaTarget::Draft202012 => format!("#/$defs/{}", name),
         }
     }
@@ -303,7 +310,10 @@ impl<'a> Exporter<'a> {
                 let rest_json = rest.as_ref().map(|r| Value::Object(self.convert(r, false)));
                 if self.opts.target.is_legacy() {
                     out.insert("items".into(), Value::Array(prefix));
-                    out.insert("additionalItems".into(), rest_json.unwrap_or(Value::Bool(false)));
+                    out.insert(
+                        "additionalItems".into(),
+                        rest_json.unwrap_or(Value::Bool(false)),
+                    );
                 } else {
                     out.insert("prefixItems".into(), Value::Array(prefix));
                     out.insert("items".into(), rest_json.unwrap_or(Value::Bool(false)));
@@ -346,7 +356,10 @@ impl<'a> Exporter<'a> {
                     null_type.insert("type".into(), s("null"));
                     out.insert(
                         "anyOf".into(),
-                        Value::Array(alloc::vec![Value::Object(inner_json), Value::Object(null_type)]),
+                        Value::Array(alloc::vec![
+                            Value::Object(inner_json),
+                            Value::Object(null_type)
+                        ]),
                     );
                     out
                 }
@@ -401,17 +414,26 @@ impl<'a> Exporter<'a> {
             SchemaDef::Options(opts_list) => {
                 let mut out = Obj::new();
                 out.insert("type".into(), s("string"));
-                let enums: Vec<Value> = opts_list.iter().map(|v| Value::String((v.clone()).into())).collect();
+                let enums: Vec<Value> = opts_list
+                    .iter()
+                    .map(|v| Value::String((v.clone()).into()))
+                    .collect();
                 out.insert("enum".into(), Value::Array(enums));
                 out
             }
             SchemaDef::Union(options) => self.combinator("anyOf", options),
             SchemaDef::Xor(options) => self.combinator("oneOf", options),
-            SchemaDef::DiscriminatedUnion { discriminator, options } => {
+            SchemaDef::DiscriminatedUnion {
+                discriminator,
+                options,
+            } => {
                 let mut out = self.combinator("oneOf", options);
                 if self.opts.target.is_openapi() {
                     let mut d = Obj::new();
-                    d.insert("propertyName".into(), Value::String((discriminator.clone()).into()));
+                    d.insert(
+                        "propertyName".into(),
+                        Value::String((discriminator.clone()).into()),
+                    );
                     out.insert("discriminator".into(), Value::Object(d));
                 }
                 out
@@ -431,10 +453,12 @@ impl<'a> Exporter<'a> {
                 // The output type of a transform is unknowable from the AST.
                 SchemaIO::Output => Obj::new(),
             },
-            SchemaDef::Pipe { input, output } | SchemaDef::Codec { input, output } => match self.opts.io {
-                SchemaIO::Input => self.convert(input, false),
-                SchemaIO::Output => self.convert(output, false),
-            },
+            SchemaDef::Pipe { input, output } | SchemaDef::Codec { input, output } => {
+                match self.opts.io {
+                    SchemaIO::Input => self.convert(input, false),
+                    SchemaIO::Output => self.convert(output, false),
+                }
+            }
         }
     }
 
@@ -528,7 +552,14 @@ impl<'a> Exporter<'a> {
 
     fn number_schema(&mut self, kind: NumKind, checks: &[Check]) -> Obj {
         let mut out = Obj::new();
-        out.insert("type".into(), s(if kind.is_integer() { "integer" } else { "number" }));
+        out.insert(
+            "type".into(),
+            s(if kind.is_integer() {
+                "integer"
+            } else {
+                "number"
+            }),
+        );
         match kind {
             NumKind::Int32 => {
                 out.insert("minimum".into(), Value::Int(i32::MIN as i64));
@@ -550,7 +581,10 @@ impl<'a> Exporter<'a> {
             _ => {}
         }
 
-        let legacy = matches!(self.opts.target, JsonSchemaTarget::Draft04 | JsonSchemaTarget::OpenApi30);
+        let legacy = matches!(
+            self.opts.target,
+            JsonSchemaTarget::Draft04 | JsonSchemaTarget::OpenApi30
+        );
         for check in checks {
             match check {
                 Check::Min { value, inclusive } => {
@@ -617,13 +651,22 @@ pub fn to_json_schema<T>(schema: &Schema<T>, options: JsonSchemaOptions) -> Valu
 
     match options.target {
         JsonSchemaTarget::Draft202012 => {
-            root_schema.insert("$schema".into(), s("https://json-schema.org/draft/2020-12/schema"));
+            root_schema.insert(
+                "$schema".into(),
+                s("https://json-schema.org/draft/2020-12/schema"),
+            );
         }
         JsonSchemaTarget::Draft07 => {
-            root_schema.insert("$schema".into(), s("http://json-schema.org/draft-07/schema#"));
+            root_schema.insert(
+                "$schema".into(),
+                s("http://json-schema.org/draft-07/schema#"),
+            );
         }
         JsonSchemaTarget::Draft04 => {
-            root_schema.insert("$schema".into(), s("http://json-schema.org/draft-04/schema#"));
+            root_schema.insert(
+                "$schema".into(),
+                s("http://json-schema.org/draft-04/schema#"),
+            );
         }
         _ => {}
     }
@@ -682,7 +725,9 @@ fn import(doc: &Arc<Value>, node: &Value, depth: usize) -> Schema<Value> {
         let doc = doc.clone();
         let reference = reference.to_string();
         return z::lazy(move || {
-            let target = resolve_ref(&doc, &reference).cloned().unwrap_or(Value::Null);
+            let target = resolve_ref(&doc, &reference)
+                .cloned()
+                .unwrap_or(Value::Null);
             import(&doc, &target, 0)
         });
     }
@@ -697,8 +742,14 @@ fn import(doc: &Arc<Value>, node: &Value, depth: usize) -> Schema<Value> {
     }
 
     let title = map.get("title").and_then(|t| t.as_str()).map(String::from);
-    let description = map.get("description").and_then(|t| t.as_str()).map(String::from);
-    let deprecated = map.get("deprecated").and_then(|d| d.as_bool()).unwrap_or(false);
+    let description = map
+        .get("description")
+        .and_then(|t| t.as_str())
+        .map(String::from);
+    let deprecated = map
+        .get("deprecated")
+        .and_then(|d| d.as_bool())
+        .unwrap_or(false);
     if title.is_some() || description.is_some() || deprecated {
         schema = schema.meta(|mut m| {
             if let Some(t) = title {
@@ -713,7 +764,11 @@ fn import(doc: &Arc<Value>, node: &Value, depth: usize) -> Schema<Value> {
     schema
 }
 
-fn import_structure(doc: &Arc<Value>, map: &BTreeMap<String, Value>, depth: usize) -> Schema<Value> {
+fn import_structure(
+    doc: &Arc<Value>,
+    map: &BTreeMap<String, Value>,
+    depth: usize,
+) -> Schema<Value> {
     use crate::z;
 
     if let Some(values) = map.get("const") {
@@ -721,14 +776,18 @@ fn import_structure(doc: &Arc<Value>, map: &BTreeMap<String, Value>, depth: usiz
     }
     if let Some(values) = map.get("enum").and_then(|e| e.as_array()) {
         if values.iter().all(|v| v.as_str().is_some()) {
-            let opts: Vec<String> = values.iter().filter_map(|v| v.as_str().map(String::from)).collect();
+            let opts: Vec<String> = values
+                .iter()
+                .filter_map(|v| v.as_str().map(String::from))
+                .collect();
             return z::options(opts).into_type::<Value>();
         }
         return z::literal(values.clone());
     }
     for (key, xor) in [("anyOf", false), ("oneOf", true)] {
         if let Some(options) = map.get(key).and_then(|a| a.as_array()) {
-            let schemas: Vec<Schema<Value>> = options.iter().map(|o| import(doc, o, depth + 1)).collect();
+            let schemas: Vec<Schema<Value>> =
+                options.iter().map(|o| import(doc, o, depth + 1)).collect();
             return if xor && schemas.len() > 1 {
                 z::xor(schemas)
             } else {
@@ -742,7 +801,10 @@ fn import_structure(doc: &Arc<Value>, map: &BTreeMap<String, Value>, depth: usiz
             return iter.fold(first, z::intersection);
         }
     }
-    if map.get("not").is_some_and(|n| n.as_object().is_some_and(|o| o.is_empty())) {
+    if map
+        .get("not")
+        .is_some_and(|n| n.as_object().is_some_and(|o| o.is_empty()))
+    {
         return z::never();
     }
 
@@ -819,14 +881,22 @@ fn import_number(map: &BTreeMap<String, Value>, integer: bool) -> Schema<Value> 
             let mut sch = $schema;
             if let Some(v) = map.get("minimum").and_then(as_f64) {
                 let exclusive = map.get("exclusiveMinimum").and_then(|e| e.as_bool()) == Some(true);
-                sch = if exclusive { sch.gt(v as _) } else { sch.gte(v as _) };
+                sch = if exclusive {
+                    sch.gt(v as _)
+                } else {
+                    sch.gte(v as _)
+                };
             }
             if let Some(v) = map.get("exclusiveMinimum").and_then(as_f64) {
                 sch = sch.gt(v as _);
             }
             if let Some(v) = map.get("maximum").and_then(as_f64) {
                 let exclusive = map.get("exclusiveMaximum").and_then(|e| e.as_bool()) == Some(true);
-                sch = if exclusive { sch.lt(v as _) } else { sch.lte(v as _) };
+                sch = if exclusive {
+                    sch.lt(v as _)
+                } else {
+                    sch.lte(v as _)
+                };
             }
             if let Some(v) = map.get("exclusiveMaximum").and_then(as_f64) {
                 sch = sch.lt(v as _);
@@ -848,9 +918,11 @@ fn import_number(map: &BTreeMap<String, Value>, integer: bool) -> Schema<Value> 
 fn import_array(doc: &Arc<Value>, map: &BTreeMap<String, Value>, depth: usize) -> Schema<Value> {
     use crate::z;
 
-    let prefix = map.get("prefixItems").and_then(|p| p.as_array()).cloned().or_else(|| {
-        map.get("items").and_then(|i| i.as_array()).cloned()
-    });
+    let prefix = map
+        .get("prefixItems")
+        .and_then(|p| p.as_array())
+        .cloned()
+        .or_else(|| map.get("items").and_then(|i| i.as_array()).cloned());
 
     if let Some(prefix) = prefix {
         let items: Vec<Schema<Value>> = prefix.iter().map(|p| import(doc, p, depth + 1)).collect();
@@ -861,7 +933,9 @@ fn import_array(doc: &Arc<Value>, map: &BTreeMap<String, Value>, depth: usize) -
             map.get("additionalItems")
         };
         return match rest_node {
-            Some(r) if r.as_object().is_some() => tuple.rest(import(doc, r, depth + 1)).into_type::<Value>(),
+            Some(r) if r.as_object().is_some() => {
+                tuple.rest(import(doc, r, depth + 1)).into_type::<Value>()
+            }
             _ => tuple.into_type::<Value>(),
         };
     }
