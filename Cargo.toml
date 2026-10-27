@@ -1,6 +1,6 @@
 [package]
 name = "rust-zod"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 authors = ["Leandro Luk <leandroluk@users.noreply.github.com>"]
 description = "Idiomatic, macro-free port of Zod v4 in Rust: pure runtime AST, closure builders, i18n error catalog, and multi-target exporters."

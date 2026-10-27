@@ -6,7 +6,6 @@ use crate::error::ZodIssueCode;
 use crate::schema::{Aux, Schema, SchemaDef};
 use crate::value::Value;
 use alloc::collections::BTreeMap;
-use alloc::format;
 use alloc::string::{String, ToString};
 use alloc::sync::Arc;
 use alloc::vec::Vec;
@@ -384,7 +383,7 @@ pub fn record<K: 'static, V: 'static>(
                 if let (Some(vk), Some(vv)) = (valid_k, valid_v) {
                     let k_str = match vk {
                         Value::String(s) => s.to_string(),
-                        other => format!("{}", other),
+                        other => other.to_string(),
                     };
                     out.insert(k_str, vv);
                 }
