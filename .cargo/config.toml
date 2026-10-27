@@ -1,0 +1,14 @@
+# Limit target/ directory disk footprint on Windows/MSVC
+[profile.dev]
+debug = 0
+strip = "debuginfo"
+incremental = false
+
+[profile.test]
+debug = 0
+strip = "debuginfo"
+incremental = false
+
+[profile.dev.package."*"]
+debug = 0
+opt-level = 0

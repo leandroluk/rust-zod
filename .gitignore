@@ -1,0 +1,5 @@
+/target
+.specs/.index/
+.specs/.cache/
+.models/
+.specs/.memory/notes/
